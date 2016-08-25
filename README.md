@@ -1,7 +1,11 @@
 # Ludum Dare 36
 
-Ludum Dare 36 by
-[belen-albeza](https://github.com/belen-albeza).
+Ludum Dare 36 entry.
+
+Play the game online!
+
+- [belenalbeza.com](http://lab.belenalbeza.com/games/ldjam-36/)
+- [Github pages](https://belen-albeza.github.io/ldjam-36) (mirror)
 
 Initial scaffolding generated with [generator-gamejam](https://github.com/belen-albeza/generator-gamejam/).
 
@@ -82,4 +86,3 @@ You can deploy to **Github Pages** with the `deploy:ghpages` task, which will bu
 ```
 gulp deploy:ghpages
 ```
-
