@@ -1,0 +1,30 @@
+html {
+  font-size: 10px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  font-family: Courier, 'Courier New', monospace;
+  font-size: 1.6rem;
+  background: #fff;
+  color: #000;
+}
+
+a {
+  color: #c39;
+}
+
+main {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+#game {
+  border: 1px solid #333;
+}
+
+footer {
+  text-align: center;
+}
