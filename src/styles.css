@@ -27,4 +27,39 @@ main {
 
 footer {
   text-align: center;
+  display: flex;
+  justify-content: space-between;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+footer p {
+    margin: 0;
+    width: 30%;
+}
+
+footer p:first-child {
+    text-align: left;
+}
+
+footer p:last-child {
+    text-align: right;
+}
+
+.fullscreen {
+    padding: 0;
+    background: #efefef;
+    border: none;
+    line-height: 20px;
+    display: inline-block;
+}
+
+.fullscreen:hover {
+    cursor: pointer;
+    background: #ccc;
+}
+
+.fullscreen img {
+    display: block;
+    margin: 5px 3px;
 }
