@@ -33,7 +33,19 @@
         <a href="http://creativecommons.org/licenses/by-nc-sa/4.0/">CC BY-NC-SA 4</a></p>
     <p><strong>Ludum Dare 36</strong><br>
       by <a href="https://twitter.com/ladybenko">@ladybenko</a></p>
-    <p><button class="fullscreen"><img src="fs-icon.svg" alt="Fullscreen" width="20" height="20"></button></p>
+    <p><button class="fullscreen" id="fullscreen"><img src="fs-icon.svg" alt="Fullscreen" width="20" height="20"></button></p>
   </footer>
+
+<script>
+function setElementToFullscreen(elem) {
+    let fsCall = elem.requestFullscreen || elem.webkitRequestFullScreen || elem.msRequestFullscreen;
+    fsCall.apply(elem);
+}
+
+document.getElementById('fullscreen').addEventListener('click', function (e) {
+    e.preventDefault();
+    setElementToFullscreen(document.getElementById('game'));
+});
+</script>
 </body>
 </html>

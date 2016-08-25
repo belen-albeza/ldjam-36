@@ -4,6 +4,14 @@ var PlayScene = require('./play_scene.js');
 
 
 var BootScene = {
+    init: function () {
+        // NOTE: change this to suit your preferred scale mode.
+        //       see http://phaser.io/docs/2.6.1/Phaser.ScaleManager.html
+        this.game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
+        this.game.scale.pageAlignVertically = true;
+        this.game.scale.pageAlignHorizontally = true;
+    },
+
     preload: function () {
         // load here assets required for the loading screen
         this.game.load.image('preloader_bar', 'images/preloader_bar.png');
@@ -32,7 +40,7 @@ var PreloaderScene = {
 
 
 window.onload = function () {
-    var game = new Phaser.Game(512, 512, Phaser.AUTO, 'game');
+    var game = new Phaser.Game(512, 512, Phaser.AUTO);
 
     game.state.add('boot', BootScene);
     game.state.add('preloader', PreloaderScene);
