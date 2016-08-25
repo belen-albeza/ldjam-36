@@ -17,10 +17,10 @@ var merge = require('merge-stream');
 var rsync = require('gulp-rsync');
 var config = {};
 try {
-  config = require('./gulp.config.json');
+    config = require('./gulp.config.json');
 }
 catch (e) {
-  console.warn('Edit or create gulp.config.json to customize your deployment' +
+    console.warn('Edit or create gulp.config.json to customize your deployment' +
     ' settings.');
 }
 
@@ -33,11 +33,11 @@ var ghpages = require('gulp-gh-pages');
 //
 
 var bundler = browserify([
-  './src/js/main.js'
+    './src/js/main.js'
 ]);
 
 var bundle = function ()  {
-  return bundler
+    return bundler
     .bundle()
     .on('error', gutil.log)
     .pipe(source('bundle.js'))
@@ -50,8 +50,8 @@ gulp.task('browserify', bundle);
 
 // 3rd party libs that don't play nice with browserify
 gulp.task('libs', function () {
-  var dir = './node_modules/phaser/build/';
-  return gulp.src(['phaser.min.js', 'phaser.map'], { cwd: dir, base: dir})
+    var dir = './node_modules/phaser/build/';
+    return gulp.src(['phaser.min.js', 'phaser.map'], { cwd: dir, base: dir})
     .pipe(gulp.dest('./.tmp/js/lib/'));
 });
 
@@ -64,40 +64,40 @@ gulp.task('js', ['browserify', 'libs']);
 gulp.task('build', ['js']);
 
 gulp.task('dist', ['build'], function () {
-  var rawFiles = gulp.src([
-    'index.html', 'raw.html',
-    'styles.css',
-    'images/**/*', 'fonts/**/*', 'audio/**/*'
-  ], { cwd: './src', base: './src' })
+    var rawFiles = gulp.src([
+        'index.html', 'raw.html',
+        'styles.css',
+        'images/**/*', 'fonts/**/*', 'audio/**/*'
+    ], { cwd: './src', base: './src' })
     .pipe(gulp.dest('./dist/'));
 
-  var builtFiles = gulp.src(['js/**/*'], { cwd: '.tmp', base: '.tmp' })
+    var builtFiles = gulp.src(['js/**/*'], { cwd: '.tmp', base: '.tmp' })
     .pipe(gulp.dest('./dist/'));
 
-  return merge(rawFiles, builtFiles);
+    return merge(rawFiles, builtFiles);
 });
 
 gulp.task('clean', function () {
-  return del(['.tmp', 'dist', '.publish']);
+    return del(['.tmp', 'dist', '.publish']);
 });
 
 
 gulp.task('deploy:rsync', ['dist'], function () {
-  return gulp.src('dist')
+    return gulp.src('dist')
     .pipe(rsync({
-      root: 'dist',
-      username: config.deploy.user,
-      hostname: config.deploy.host,
-      destination: config.deploy.destination,
-      recursive: true,
-      clean: true,
-      progress: true,
-      incremental: true
+        root: 'dist',
+        username: config.deploy.user,
+        hostname: config.deploy.host,
+        destination: config.deploy.destination,
+        recursive: true,
+        clean: true,
+        progress: true,
+        incremental: true
     }));
 });
 
 gulp.task('deploy:ghpages', ['dist'], function () {
-  return gulp.src('dist/**/*')
+    return gulp.src('dist/**/*')
     .pipe(ghpages());
 });
 
@@ -109,16 +109,16 @@ gulp.task('deploy:ghpages', ['dist'], function () {
 //
 
 gulp.task('watch', function () {
-  bundler = watchify(bundler, watchify.args);
-  bundler.on('update', bundle);
+    bundler = watchify(bundler, watchify.args);
+    bundler.on('update', bundle);
 });
 
 gulp.task('run', ['watch', 'build'], function () {
-  browserSync.init({
-    server: ['src', '.tmp']
-  });
+    browserSync.init({
+        server: ['src', '.tmp']
+    });
 
-  gulp.watch('src/**/*.{html,css}').on('change', browserSync.reload);
+    gulp.watch('src/**/*.{html,css}').on('change', browserSync.reload);
 });
 
 //
