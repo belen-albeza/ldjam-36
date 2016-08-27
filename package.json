@@ -1,20 +1,18 @@
 {
   "version": "0.0.0",
   "name": "ludum-dare-36",
-  "version": "0.0.0",
-  "author": "",
-  "license": "CC-BY-NC-SA-4.0",
-  
-  "repository": "belen-albeza/ldjam-36",
   "author": "belen-albeza",
-  
+  "license": "CC-BY-NC-SA-4.0",
+  "repository": "belen-albeza/ldjam-36",
   "dependencies": {
-    "browserify": "*",
     "browser-sync": "*",
+    "browserify": "*",
     "del": "*",
     "gulp": "*",
     "gulp-connect": "*",
-    "gulp-gh-pages": "*", 
+    "gulp-gh-pages": "*",
+    "gulp-json-minify": "^1.0.5",
+    "gulp-rename": "^1.2.2",
     "gulp-rsync": "*",
     "gulp-util": "*",
     "merge-stream": "*",

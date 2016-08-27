@@ -6,10 +6,12 @@ var gutil = require('gulp-util');
 var browserify = require('browserify');
 var watchify = require('watchify');
 var source = require('vinyl-source-stream');
+var jsonMinify = require('gulp-json-minify');
 
 var browserSync = require('browser-sync').create();
 var del = require('del');
 var merge = require('merge-stream');
+var rename = require('gulp-rename');
 
 
 // IMPORTANT
@@ -20,12 +22,11 @@ try {
     config = require('./gulp.config.json');
 }
 catch (e) {
-    console.warn('Edit or create gulp.config.json to customize your deployment' +
-    ' settings.');
+    console.warn('Edit or create gulp.config.json to customize your ' +
+        'deployment settings.');
 }
 
 var ghpages = require('gulp-gh-pages');
-
 
 
 //
@@ -58,10 +59,25 @@ gulp.task('libs', function () {
 gulp.task('js', ['browserify', 'libs']);
 
 //
+// minifying
+//
+
+gulp.task('json:minify', function () {
+    return gulp.src('src/data/*.json')
+        .pipe(jsonMinify())
+        .pipe(rename({
+            suffix: '.min',
+            extname: '.json'
+        }))
+        .pipe(gulp.dest('./.tmp/data/'))
+    .on('error', gutil.log);
+});
+
+//
 // build and deploy
 //
 
-gulp.task('build', ['js']);
+gulp.task('build', ['js', 'json:minify']);
 
 gulp.task('dist', ['build'], function () {
     var rawFiles = gulp.src([
@@ -71,7 +87,9 @@ gulp.task('dist', ['build'], function () {
     ], { cwd: './src', base: './src' })
     .pipe(gulp.dest('./dist/'));
 
-    var builtFiles = gulp.src(['js/**/*'], { cwd: '.tmp', base: '.tmp' })
+    var builtFiles = gulp.src([
+        'js/**/*', 'data/**/*'
+    ], { cwd: '.tmp', base: '.tmp' })
     .pipe(gulp.dest('./dist/'));
 
     return merge(rawFiles, builtFiles);
