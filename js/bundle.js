@@ -7,7 +7,7 @@ var BootState = {
     init: function () {
         // NOTE: change this to suit your preferred scale mode.
         //       see http://phaser.io/docs/2.6.1/Phaser.ScaleManager.html
-        this.game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
+        this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.game.scale.pageAlignVertically = true;
         this.game.scale.pageAlignHorizontally = true;
 
@@ -74,7 +74,8 @@ var PlayState = {};
 
 PlayState.init = function () {
     this.events = {
-        onHeroineMove: new Phaser.Signal()
+        onHeroineMove: new Phaser.Signal(),
+        onSceneEnter: new Phaser.Signal()
     };
 };
 
@@ -92,8 +93,8 @@ PlayState.create = function () {
     hudBackground.anchor.setTo(0, 1);
     hudBackground.fixedToCamera = true;
     this.typeWriter = new TypeWriter(textHudGroup, 8, 426);
-    this.tooltip = new Tooltip(textHudGroup, 796, 506);
-    this.tooltip.lineImage.anchor.setTo(1, 1);
+    this.tooltip = new Tooltip(textHudGroup, 400, 506);
+    this.tooltip.lineImage.anchor.setTo(0.5, 1);
 
     this._setupInput();
 
@@ -112,7 +113,8 @@ PlayState.create = function () {
 
     this.isControlFrozen = false;
     this.story.start();
-
+    // NOTE: always manually trigger onEnter in the first room
+    this.events.onSceneEnter.dispatch(this.scene.key);
 };
 
 PlayState.update = function () {
@@ -247,9 +249,6 @@ function Tooltip(group, x, y) {
 }
 
 Tooltip.prototype.write = function (text, color) {
-    console.log('TOOLTIP', text, color);
-    console.log(this.lineFont);
-    console.log(this.lineImage);
     this.lineFont.text = text;
     this.lineImage.tint = color || COLORS.GRAY;
     this.lineImage.visible = true;
@@ -357,7 +356,7 @@ function getPositionFromIndex(data, index) {
 
 function Scene(game, sceneKey, attrezzoGroup) {
     this.game = game;
-    this.id = sceneKey;
+    this.key = sceneKey;
     var data = JSON.parse(game.cache.getText(`map:${sceneKey}`));
 
     this.map = game.add.tilemap(null, data.tilewidth, data.tileheight,
@@ -411,12 +410,27 @@ function Story(game, typeWriter, tooltip, gameEvents) {
     this.writer = typeWriter;
     this.tooltip = tooltip;
     this.gameEvents = gameEvents;
+    this.callbacks = {};
+    this.visitedScenes = {};
 
     this.textBuffer = [];
     this.events = {
         onReleaseControl: new Phaser.Signal(),
         onFreezeControl: new Phaser.Signal()
     };
+
+    this.gameEvents.onSceneEnter.add(function (sceneKey) {
+        let wasVisited = this.visitedScenes[sceneKey] !== undefined;
+        this.visitedScenes[sceneKey] = wasVisited ?
+            this.visitedScenes[sceneKey] + 1 : 1;
+
+        let enterCallback = this.callbacks[`onSceneEnter:${sceneKey}`];
+        let firstEnterCallback =
+            this.callbacks[`onSceneFirstEnter:${sceneKey}`];
+
+        if (!wasVisited && firstEnterCallback) { firstEnterCallback(); }
+        if (enterCallback) { enterCallback(!wasVisited); }
+    }, this);
 }
 
 Story.prototype.start = function () {
@@ -446,7 +460,7 @@ Story.prototype.commitPage = function () {
 };
 
 Story.prototype._setupIntro = function () {
-    // this.events.onRoomEnter.addOnce(function () {
+    this.callbacks['onSceneFirstEnter:room00'] = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'What... is this?');
         this.commitPage();
@@ -463,7 +477,7 @@ Story.prototype._setupIntro = function () {
                 this.tooltip.erase();
             }, this);
         }, this);
-    // }, this);
+    }.bind(this);
 };
 
 module.exports = Story;
