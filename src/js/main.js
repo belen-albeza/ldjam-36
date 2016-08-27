@@ -1,15 +1,17 @@
 'use strict';
 
-var PlayScene = require('./play_scene.js');
+var PlayState = require('./play_state.js');
 
-
-var BootScene = {
+var BootState = {
     init: function () {
         // NOTE: change this to suit your preferred scale mode.
         //       see http://phaser.io/docs/2.6.1/Phaser.ScaleManager.html
         this.game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
         this.game.scale.pageAlignVertically = true;
         this.game.scale.pageAlignHorizontally = true;
+
+        // TODO: remove
+        this.game.time.advancedTiming = true;
     },
 
     preload: function () {
@@ -23,7 +25,7 @@ var BootScene = {
 };
 
 
-var PreloaderScene = {
+var PreloaderState = {
     preload: function () {
         this.loadingBar = this.game.add.sprite(0, 240, 'preloader_bar');
         this.loadingBar.anchor.setTo(0, 0.5);
@@ -31,6 +33,11 @@ var PreloaderScene = {
 
         // image assets
         this.game.load.image('background', 'images/background.png');
+        this.game.load.image('heroine', 'images/chara.png');
+
+        // maps and tilesets
+        this.game.load.image('tiles:world', 'images/world_elements.png');
+        this.game.load.text('map:room00', 'data/room00.min.json');
     },
 
     create: function () {
@@ -40,11 +47,11 @@ var PreloaderScene = {
 
 
 window.onload = function () {
-    var game = new Phaser.Game(800, 512, Phaser.AUTO);
+    var game = new Phaser.Game(800, 512, Phaser.CANVAS);
 
-    game.state.add('boot', BootScene);
-    game.state.add('preloader', PreloaderScene);
-    game.state.add('play', PlayScene);
+    game.state.add('boot', BootState);
+    game.state.add('preloader', PreloaderState);
+    game.state.add('play', PlayState);
 
     game.state.start('boot');
 };

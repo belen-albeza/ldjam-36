@@ -11,7 +11,7 @@
     "gulp": "*",
     "gulp-connect": "*",
     "gulp-gh-pages": "*",
-    "gulp-json-minify": "^1.0.5",
+    "gulp-json-transform": "^0.4.2",
     "gulp-rename": "^1.2.2",
     "gulp-rsync": "*",
     "gulp-util": "*",

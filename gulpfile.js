@@ -1,12 +1,14 @@
 'use strict';
 
+const GAME_SCALE = 4;
+
 var gulp = require('gulp');
 var gutil = require('gulp-util');
 
 var browserify = require('browserify');
 var watchify = require('watchify');
 var source = require('vinyl-source-stream');
-var jsonMinify = require('gulp-json-minify');
+var jsonTransform = require('gulp-json-transform');
 
 var browserSync = require('browser-sync').create();
 var del = require('del');
@@ -59,12 +61,25 @@ gulp.task('libs', function () {
 gulp.task('js', ['browserify', 'libs']);
 
 //
-// minifying
+// game-related builds
 //
 
-gulp.task('json:minify', function () {
-    return gulp.src('src/data/*.json')
-        .pipe(jsonMinify())
+gulp.task('build:maps', function () {
+    gulp.src('src/data/*.json')
+        .pipe(jsonTransform(function (data) {
+            return {
+                width: data.tileswide,
+                height: data.tileshigh,
+                tilewidth: data.tilewidth * GAME_SCALE,
+                tileheight: data.tileheight * GAME_SCALE,
+                layers: data.layers.filter(x => x !== null).map(function (l) {
+                    return {
+                        data: l.tiles.map(x => x.tile === 0 ? -1 : x.tile),
+                        name: l.name
+                    };
+                })
+            };
+        }), 2)
         .pipe(rename({
             suffix: '.min',
             extname: '.json'
@@ -77,7 +92,7 @@ gulp.task('json:minify', function () {
 // build and deploy
 //
 
-gulp.task('build', ['js', 'json:minify']);
+gulp.task('build', ['js', 'build:maps']);
 
 gulp.task('dist', ['build'], function () {
     var rawFiles = gulp.src([
@@ -118,8 +133,6 @@ gulp.task('deploy:ghpages', ['dist'], function () {
     return gulp.src('dist/**/*')
     .pipe(ghpages());
 });
-
-
 
 
 //
