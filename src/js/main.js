@@ -6,7 +6,7 @@ var BootState = {
     init: function () {
         // NOTE: change this to suit your preferred scale mode.
         //       see http://phaser.io/docs/2.6.1/Phaser.ScaleManager.html
-        this.game.scale.scaleMode = Phaser.ScaleManager.NO_SCALE;
+        this.game.scale.scaleMode = Phaser.ScaleManager.SHOW_ALL;
         this.game.scale.pageAlignVertically = true;
         this.game.scale.pageAlignHorizontally = true;
 
