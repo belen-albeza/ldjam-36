@@ -2,6 +2,7 @@
 
 var Scene = require('./world/scene.js');
 var Heroine = require('./prefabs/heroine.js');
+var TypeWriter = require('./ui/type_writer.js');
 
 var PlayState = {};
 
@@ -10,9 +11,11 @@ PlayState.create = function () {
 
     let background = this.game.add.image(0, 0, 'background');
     background.fixedToCamera = true;
-    let textHud = this.game.add.image(0, 512, 'text_hud');
-    textHud.anchor.setTo(0, 1);
-    textHud.fixedToCamera = true;
+
+    let textHudGroup = this.game.add.group();
+    textHudGroup.add(new Phaser.Image(this.game, 0, 512, 'text_hud'))
+        .anchor.setTo(0, 1)
+        .fixedToCamera = true;
 
     let attrezzo = this.game.add.group();
     this.scene = new Scene(this.game, 'room00', attrezzo);
@@ -22,11 +25,11 @@ PlayState.create = function () {
     this.characters.add(this.heroine);
     this.game.camera.follow(this.heroine);
 
-    this.line = this.game.add.retroFont('font', 16, 24,
-        Phaser.RetroFont.TEXT_SET2.replace(' ', '') + ' ');
-    this.line.text = 'Use <arrow keys> to move left and right.';
-    let lineImage = this.game.add.image(4, 424, this.line);
-    lineImage.fixedToCamera = true;
+    this.typeWriter = new TypeWriter(textHudGroup, 8, 426);
+    this.typeWriter.write(0, 'Use <arrow keys> to move left and right.',
+        TypeWriter.COLORS.GRAY);
+    this.typeWriter.write(1, 'Hello, stranger.');
+    this.typeWriter.write(2, '<continue>', TypeWriter.COLORS.GRAY)
 };
 
 PlayState.update = function () {
