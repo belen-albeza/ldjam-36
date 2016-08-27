@@ -24,10 +24,9 @@ PlayState.create = function () {
 
     this.line = this.game.add.retroFont('font', 16, 24,
         Phaser.RetroFont.TEXT_SET2.replace(' ', '') + ' ');
-    console.log(Phaser.RetroFont.TEXT_SET2);
-    this.game.add.image(4, 424, this.line);
     this.line.text = 'Use <arrow keys> to move left and right.';
-    this.line.fixedToCamera = true;
+    let lineImage = this.game.add.image(4, 424, this.line);
+    lineImage.fixedToCamera = true;
 };
 
 PlayState.update = function () {
