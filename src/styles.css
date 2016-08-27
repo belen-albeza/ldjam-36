@@ -8,12 +8,12 @@ body {
   margin: 0;
   font-family: Courier, 'Courier New', monospace;
   font-size: 1.6rem;
-  background: #fff;
+  background: #eec39a;
   color: #000;
 }
 
 a {
-  color: #c39;
+  color: #306082;
 }
 
 main {
@@ -35,20 +35,22 @@ footer {
 
 footer p {
     margin: 0;
-    width: 30%;
+    flex: 1 1 auto;
 }
 
 footer p:first-child {
     text-align: left;
+    width: 30%;
 }
 
 footer p:last-child {
     text-align: right;
+    width: 30%;
 }
 
 .fullscreen {
     padding: 0;
-    background: #efefef;
+    background: rgba(0, 0, 0, 0.10);
     border: none;
     line-height: 20px;
     display: inline-block;
@@ -56,7 +58,7 @@ footer p:last-child {
 
 .fullscreen:hover {
     cursor: pointer;
-    background: #ccc;
+    background: rgba(0, 0, 0, 0.20);
 }
 
 .fullscreen img {
