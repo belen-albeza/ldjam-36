@@ -14,12 +14,27 @@ function Story(game, typeWriter, tooltip, gameEvents) {
     this.writer = typeWriter;
     this.tooltip = tooltip;
     this.gameEvents = gameEvents;
+    this.callbacks = {};
+    this.visitedScenes = {};
 
     this.textBuffer = [];
     this.events = {
         onReleaseControl: new Phaser.Signal(),
         onFreezeControl: new Phaser.Signal()
     };
+
+    this.gameEvents.onSceneEnter.add(function (sceneKey) {
+        let wasVisited = this.visitedScenes[sceneKey] !== undefined;
+        this.visitedScenes[sceneKey] = wasVisited ?
+            this.visitedScenes[sceneKey] + 1 : 1;
+
+        let enterCallback = this.callbacks[`onSceneEnter:${sceneKey}`];
+        let firstEnterCallback =
+            this.callbacks[`onSceneFirstEnter:${sceneKey}`];
+
+        if (!wasVisited && firstEnterCallback) { firstEnterCallback(); }
+        if (enterCallback) { enterCallback(!wasVisited); }
+    }, this);
 }
 
 Story.prototype.start = function () {
@@ -49,7 +64,7 @@ Story.prototype.commitPage = function () {
 };
 
 Story.prototype._setupIntro = function () {
-    // this.events.onRoomEnter.addOnce(function () {
+    this.callbacks['onSceneFirstEnter:room00'] = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'What... is this?');
         this.commitPage();
@@ -66,7 +81,7 @@ Story.prototype._setupIntro = function () {
                 this.tooltip.erase();
             }, this);
         }, this);
-    // }, this);
+    }.bind(this);
 };
 
 module.exports = Story;

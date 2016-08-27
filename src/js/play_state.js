@@ -11,7 +11,8 @@ var PlayState = {};
 
 PlayState.init = function () {
     this.events = {
-        onHeroineMove: new Phaser.Signal()
+        onHeroineMove: new Phaser.Signal(),
+        onSceneEnter: new Phaser.Signal()
     };
 };
 
@@ -29,8 +30,8 @@ PlayState.create = function () {
     hudBackground.anchor.setTo(0, 1);
     hudBackground.fixedToCamera = true;
     this.typeWriter = new TypeWriter(textHudGroup, 8, 426);
-    this.tooltip = new Tooltip(textHudGroup, 796, 506);
-    this.tooltip.lineImage.anchor.setTo(1, 1);
+    this.tooltip = new Tooltip(textHudGroup, 400, 506);
+    this.tooltip.lineImage.anchor.setTo(0.5, 1);
 
     this._setupInput();
 
@@ -49,7 +50,8 @@ PlayState.create = function () {
 
     this.isControlFrozen = false;
     this.story.start();
-
+    // NOTE: always manually trigger onEnter in the first room
+    this.events.onSceneEnter.dispatch(this.scene.key);
 };
 
 PlayState.update = function () {

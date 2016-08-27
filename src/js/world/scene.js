@@ -13,7 +13,7 @@ function getPositionFromIndex(data, index) {
 
 function Scene(game, sceneKey, attrezzoGroup) {
     this.game = game;
-    this.id = sceneKey;
+    this.key = sceneKey;
     var data = JSON.parse(game.cache.getText(`map:${sceneKey}`));
 
     this.map = game.add.tilemap(null, data.tilewidth, data.tileheight,

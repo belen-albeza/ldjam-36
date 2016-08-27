@@ -24,9 +24,6 @@ function Tooltip(group, x, y) {
 }
 
 Tooltip.prototype.write = function (text, color) {
-    console.log('TOOLTIP', text, color);
-    console.log(this.lineFont);
-    console.log(this.lineImage);
     this.lineFont.text = text;
     this.lineImage.tint = color || COLORS.GRAY;
     this.lineImage.visible = true;
