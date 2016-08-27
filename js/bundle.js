@@ -34,7 +34,11 @@ var PreloaderState = {
 
         // image assets
         this.game.load.image('background', 'images/background.png');
+        this.game.load.image('text_hud', 'images/text_hud.png');
+        this.game.load.image('cursor', 'images/cursor.png');
+        this.game.load.image('cloud', 'images/cloud.png');
         this.game.load.image('heroine', 'images/chara.png');
+        this.game.load.image('font', 'images/font.png');
 
         // maps and tilesets
         this.game.load.image('tiles:world', 'images/world_elements.png');
@@ -70,13 +74,24 @@ PlayState.create = function () {
 
     let background = this.game.add.image(0, 0, 'background');
     background.fixedToCamera = true;
+    let textHud = this.game.add.image(0, 512, 'text_hud');
+    textHud.anchor.setTo(0, 1);
+    textHud.fixedToCamera = true;
 
-    this.scene = new Scene(this.game, 'room00');
+    let attrezzo = this.game.add.group();
+    this.scene = new Scene(this.game, 'room00', attrezzo);
     this.characters = this.game.add.group();
 
     this.heroine = new Heroine(this.game, 100, 384);
     this.characters.add(this.heroine);
     this.game.camera.follow(this.heroine);
+
+    this.line = this.game.add.retroFont('font', 16, 24,
+        Phaser.RetroFont.TEXT_SET2.replace(' ', '') + ' ');
+    console.log(Phaser.RetroFont.TEXT_SET2);
+    this.game.add.image(4, 424, this.line);
+    this.line.text = 'Use <arrow keys> to move left and right.';
+    this.line.fixedToCamera = true;
 };
 
 PlayState.update = function () {
@@ -92,7 +107,7 @@ PlayState.update = function () {
 };
 
 PlayState.render = function () {
-    this.game.debug.text(this.game.time.fps, 2, 14, '#fff');
+    // this.game.debug.text(this.game.time.fps, 2, 14, '#fff');
 };
 
 PlayState._setupInput = function () {
@@ -101,7 +116,52 @@ PlayState._setupInput = function () {
 
 module.exports = PlayState;
 
-},{"./prefabs/heroine.js":3,"./world/scene.js":4}],3:[function(require,module,exports){
+},{"./prefabs/heroine.js":4,"./world/scene.js":5}],3:[function(require,module,exports){
+'use strict';
+
+const MIN_SPEED = 10;
+const MAX_SPEED = 50;
+
+function Cloud(game, x, y) {
+    Phaser.Sprite.call(this, game, x, y, 'cloud');
+
+    this.anchor.setTo(0.5, 0.5);
+    this.alpha = 0.6;
+
+    this.game.physics.enable(this);
+    this.checkWorldBounds = true;
+
+    this.reset(x, y);
+    this._wasInside = true;
+    this.events.onOutOfBounds.add(function () {
+        if (this._wasInside) { this.reset(); }
+    }, this);
+    this.events.onEnterBounds.add(function () {
+        this._wasInside = true;
+    }, this);
+}
+
+// inherit from Phaser.prototype
+Cloud.prototype = Object.create(Phaser.Sprite.prototype);
+Cloud.prototype.constructor = Cloud;
+
+Cloud.prototype.reset = function (x, y) {
+    Phaser.Sprite.prototype.reset.call(this, x || 0, y || 0);
+    this._wasInside = false;
+
+    if (x === undefined || y === undefined) {
+        this.position.setTo(
+            this.game.world.width +
+                this.game.rnd.between(0, this.game.world.width),
+            this.game.rnd.between(50, 300));
+    }
+
+    this.body.velocity.x = -this.game.rnd.between(MIN_SPEED, MAX_SPEED);
+};
+
+module.exports = Cloud;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 const MOVE_SPEED = 200;
@@ -127,8 +187,10 @@ Heroine.prototype.move = function (direction) {
 
 module.exports = Heroine;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
+
+var Cloud = require('../prefabs/cloud.js');
 
 const LAYERS = ['background00', 'background01', 'foreground00', 'foreground01'];
 
@@ -139,7 +201,8 @@ function getPositionFromIndex(data, index) {
     };
 }
 
-function Scene(game, sceneKey) {
+function Scene(game, sceneKey, attrezzoGroup) {
+    this.game = game;
     this.id = sceneKey;
     var data = JSON.parse(game.cache.getText(`map:${sceneKey}`));
 
@@ -165,8 +228,16 @@ function Scene(game, sceneKey) {
     }, this);
 
     this.layers[0].resizeWorld();
+
+    this._spawnAttrezzo(attrezzoGroup);
 }
+
+Scene.prototype._spawnAttrezzo = function (group) {
+    group.add(new Cloud(this.game, 100, 130));
+    group.add(new Cloud(this.game, 500, 250));
+    group.add(new Cloud(this.game, 1200, 80));
+};
 
 module.exports = Scene;
 
-},{}]},{},[1]);
+},{"../prefabs/cloud.js":3}]},{},[1]);
