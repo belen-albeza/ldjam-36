@@ -10,8 +10,12 @@ PlayState.create = function () {
 
     let background = this.game.add.image(0, 0, 'background');
     background.fixedToCamera = true;
+    let textHud = this.game.add.image(0, 512, 'text_hud');
+    textHud.anchor.setTo(0, 1);
+    textHud.fixedToCamera = true;
 
-    this.scene = new Scene(this.game, 'room00');
+    let attrezzo = this.game.add.group();
+    this.scene = new Scene(this.game, 'room00', attrezzo);
     this.characters = this.game.add.group();
 
     this.heroine = new Heroine(this.game, 100, 384);

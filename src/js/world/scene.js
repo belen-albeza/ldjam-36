@@ -1,5 +1,7 @@
 'use strict';
 
+var Cloud = require('../prefabs/cloud.js');
+
 const LAYERS = ['background00', 'background01', 'foreground00', 'foreground01'];
 
 function getPositionFromIndex(data, index) {
@@ -9,7 +11,8 @@ function getPositionFromIndex(data, index) {
     };
 }
 
-function Scene(game, sceneKey) {
+function Scene(game, sceneKey, attrezzoGroup) {
+    this.game = game;
     this.id = sceneKey;
     var data = JSON.parse(game.cache.getText(`map:${sceneKey}`));
 
@@ -35,6 +38,14 @@ function Scene(game, sceneKey) {
     }, this);
 
     this.layers[0].resizeWorld();
+
+    this._spawnAttrezzo(attrezzoGroup);
 }
+
+Scene.prototype._spawnAttrezzo = function (group) {
+    group.add(new Cloud(this.game, 100, 130));
+    group.add(new Cloud(this.game, 500, 250));
+    group.add(new Cloud(this.game, 1200, 80));
+};
 
 module.exports = Scene;

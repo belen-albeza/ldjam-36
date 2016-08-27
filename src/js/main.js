@@ -33,6 +33,8 @@ var PreloaderState = {
 
         // image assets
         this.game.load.image('background', 'images/background.png');
+        this.game.load.image('text_hud', 'images/text_hud.png');
+        this.game.load.image('cloud', 'images/cloud.png');
         this.game.load.image('heroine', 'images/chara.png');
 
         // maps and tilesets
