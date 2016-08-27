@@ -15,6 +15,9 @@ const COLORS = {
 
 function TypeWriter(group, x, y) { // 8, 426
     this.game = group.game;
+    this.events = {
+        onQueueFinish: new Phaser.Signal()
+    };
 
     this.lineFonts = [];
     for (let i = 0; i < LINE_COUNT; i++) {
@@ -27,14 +30,48 @@ function TypeWriter(group, x, y) { // 8, 426
         img.fixedToCamera = true;
         return img;
     }, this);
+
+    this.pageQueue = [];
 }
 
+TypeWriter.prototype.page = function (lines) {
+    this.pageQueue.push(lines);
+};
+
+TypeWriter.prototype.print = function () {
+    let lines = this.pageQueue.shift();
+
+    lines.forEach(function (line, i) {
+        this.write(i, line.text, line.color);
+    }, this);
+    for (var i = lines.length; i < LINE_COUNT; i++) {
+        this.write(i, '');
+    }
+};
+
+TypeWriter.prototype.next = function () {
+    if (this.pageQueue.length > 0 ) {
+        this.print();
+    }
+    else {
+        this.clear();
+        this.events.onQueueFinish.dispatch();
+    }
+};
+
+TypeWriter.prototype.clear = function () {
+    for (var i = 0; i < LINE_COUNT; i++) {
+        this.write(i, '');
+    }
+};
+
 TypeWriter.prototype.write = function (line, text, color) {
-    console.log(line, text, color);
+    // console.log(line, text, color);
     this.lineFonts[line].text = text;
     this.lineImages[line].tint = color || COLORS.WHITE;
 };
 
 TypeWriter.COLORS = COLORS;
+TypeWriter.LINE_COUNT = 3;
 
 module.exports = TypeWriter;
