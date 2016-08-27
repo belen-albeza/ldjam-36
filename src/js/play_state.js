@@ -21,6 +21,13 @@ PlayState.create = function () {
     this.heroine = new Heroine(this.game, 100, 384);
     this.characters.add(this.heroine);
     this.game.camera.follow(this.heroine);
+
+    this.line = this.game.add.retroFont('font', 16, 24,
+        Phaser.RetroFont.TEXT_SET2.replace(' ', '') + ' ');
+    console.log(Phaser.RetroFont.TEXT_SET2);
+    this.game.add.image(4, 424, this.line);
+    this.line.text = 'Use <arrow keys> to move left and right.';
+    this.line.fixedToCamera = true;
 };
 
 PlayState.update = function () {
@@ -36,7 +43,7 @@ PlayState.update = function () {
 };
 
 PlayState.render = function () {
-    this.game.debug.text(this.game.time.fps, 2, 14, '#fff');
+    // this.game.debug.text(this.game.time.fps, 2, 14, '#fff');
 };
 
 PlayState._setupInput = function () {
