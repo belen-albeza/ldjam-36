@@ -29,8 +29,8 @@ var PreloaderScene = {
         this.loadingBar.anchor.setTo(0, 0.5);
         this.load.setPreloadSprite(this.loadingBar);
 
-        // TODO: load here the assets for the game
-        this.game.load.image('logo', 'images/phaser.png');
+        // image assets
+        this.game.load.image('background', 'images/background.png');
     },
 
     create: function () {
@@ -40,7 +40,7 @@ var PreloaderScene = {
 
 
 window.onload = function () {
-    var game = new Phaser.Game(816, 512, Phaser.AUTO);
+    var game = new Phaser.Game(800, 512, Phaser.AUTO);
 
     game.state.add('boot', BootScene);
     game.state.add('preloader', PreloaderScene);
