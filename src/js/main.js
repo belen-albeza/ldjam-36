@@ -46,7 +46,7 @@ var PreloaderState = {
         this.game.load.image('background', 'images/background.png');
         this.game.load.image('text_hud', 'images/text_hud.png');
         this.game.load.image('cloud', 'images/cloud.png');
-        this.game.load.image('heroine', 'images/chara.png');
+        this.game.load.spritesheet('heroine', 'images/chara.png', 32, 64);
         this.game.load.image('font', 'images/font.png');
         this.game.load.image('music_box_bg', 'images/music_box_bg.png');
         this.game.load.spritesheet('music_gem', 'images/music_gems.png',

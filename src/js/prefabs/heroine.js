@@ -8,6 +8,11 @@ function Heroine(game, x, y) {
    this.anchor.setTo(0.5, 1);
    this.game.physics.enable(this);
    this.body.collideWorldBounds = true;
+
+   this.animations.add('idle', [0, 1], 2);
+   this.animations.add('run', [2, 3, 4, 5, 6], 10);
+
+   this.animations.play('idle', null, true);
 }
 
 // inherit from Phaser.Sprite

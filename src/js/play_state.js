@@ -78,16 +78,19 @@ PlayState.update = function () {
     if (this.keys.left.isDown && !this.isControlFrozen) {
         this.heroine.move(-1);
         this.events.onHeroineMove.dispatch();
+        this.heroine.animations.play('run');
         moved = true;
     }
     else if (this.keys.right.isDown && !this.isControlFrozen) {
         this.heroine.move(1);
         this.events.onHeroineMove.dispatch();
+        this.heroine.animations.play('run');
         moved = true;
     }
     else {
         this.sfx.steps.stop();
         this.heroine.move(0);
+        this.heroine.animations.play('idle');
     }
 
     if (moved && !this.sfx.steps.isPlaying) {
