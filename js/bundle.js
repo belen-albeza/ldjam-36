@@ -870,6 +870,10 @@ Story.prototype._setupIntro = function () {
         }
     }.bind(this);
 
+    this.callbacks['onUntouch:room00:artifact:0'] = function () {
+        this.tooltip.erase();
+    }.bind(this);
+
     this.callbacks['onAction:room00:artifact:1'] = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'Another of these artifacts...');
