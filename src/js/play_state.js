@@ -185,7 +185,7 @@ PlayState._setupStory = function () {
         this.bgm.fadeOut(500);
         this.bgm.onFadeComplete.addOnce(function () {
             this.bgm.stop();
-            this.game.state.start('play', true, false, 'intro');
+            this.game.state.start('title');
         }, this);
     }, this);
 };
@@ -230,7 +230,7 @@ PlayState._handleCollisions = function () {
             id: object.id
         };
 
-        this.cursorTooltip.write(object.name, Tooltip.COLORS.GRAY);
+        this.cursorTooltip.write(object.name, Tooltip.COLORS.PURPLE);
 
         // wasn't overlapping last frame
         if (this.lastOverlap !== object) {

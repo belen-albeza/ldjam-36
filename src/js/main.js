@@ -1,6 +1,7 @@
 'use strict';
 
 var PlayState = require('./play_state.js');
+var TitleState = require('./title_state.js');
 
 var BootState = {
     init: function () {
@@ -63,7 +64,7 @@ var PreloaderState = {
     },
 
     create: function () {
-        this.game.state.start('play', true, false, 'room00');
+        this.game.state.start('title');
     }
 };
 
@@ -73,6 +74,7 @@ window.onload = function () {
 
     game.state.add('boot', BootState);
     game.state.add('preloader', PreloaderState);
+    game.state.add('title', TitleState);
     game.state.add('play', PlayState);
 
     game.state.start('boot');

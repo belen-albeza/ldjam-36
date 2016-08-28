@@ -10,7 +10,8 @@ const COLORS = {
    AQUA: 0x5fcde4,
    EMERALD: 0x37946e,
    ORANGE: 0xdf7126,
-   BLACK: 0x000000
+   BLACK: 0x000000,
+   PURPLE: 0x45283c
 };
 
 function Tooltip(group, x, y) {
