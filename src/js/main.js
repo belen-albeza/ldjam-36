@@ -42,6 +42,7 @@ var PreloaderState = {
         this.game.load.audio('sfx:teleport', 'audio/sfx_teleport.wav');
         this.game.load.audio('sfx:steps',
             ['audio/sfx_steps.mp3', 'audio/sfx_steps.ogg']);
+        this.game.load.audio('bgm', ['audio/bgm.mp3', 'audio/bgm.ogg']);
 
         // image assets
         this.game.load.image('background', 'images/background.png');

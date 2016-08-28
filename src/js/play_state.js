@@ -73,6 +73,16 @@ PlayState.create = function () {
     this.sfx.artifact = this.game.add.audio('sfx:artifact', 0.6);
     this.sfx.steps = this.game.add.audio('sfx:steps', 0.6);
     this.sfx.teleport = this.game.add.audio('sfx:teleport', 0.6);
+    this.bgm = this.game.add.audio('bgm');
+    if (this.bgm.isDecoded) {
+        this.bgm.fadeIn(2000, true);
+    }
+    else {
+        this.bgm.onDecoded.addOnce(function () {
+            this.bgm.fadeIn(2000, true);
+        }, this);
+    }
+
     this.minigameGroup = this.game.add.group();
 };
 
@@ -163,7 +173,9 @@ PlayState._setupStory = function () {
     this.story.events.onTeleport.add(function (sceneKey) {
         this.isControlFrozen = true;
         this.sfx.teleport.play();
+        this.bgm.fadeOut(500);
         this.sfx.teleport.onStop.addOnce(function () {
+            this.bgm.stop();
             this.game.state.start('play', true, false, sceneKey);
         }, this);
     }, this);
@@ -176,9 +188,12 @@ PlayState._spawnMusicBox = function (melodyKey) {
     this.musicBox.events.onSuccess.addOnce(function () {
         this._clearMusicBox();
         this.isControlFrozen = false;
-        this.events.onPuzzleSuccess.dispatch({type: 'musicbox', key: melodyKey});
+        this.bgm.fadeIn(2000, true);
+        this.events.onPuzzleSuccess.dispatch(
+            {type: 'musicbox', key: melodyKey});
     }, this);
 
+    this.bgm.fadeOut(500);
     this.game.time.events.add(1000, function () {
         this.musicBox.play();
     }, this);
