@@ -23,6 +23,12 @@ function Story(game, typeWriter, tooltip, gameEvents) {
         onFreezeControl: new Phaser.Signal()
     };
 
+    this.gameEvents.onAction.add(function (entity) {
+        let callback = this.callbacks[
+            `onAction:${entity.scene}:${entity.type}:${entity.id}`];
+        if (callback) { callback(); }
+    }, this);
+
     this.gameEvents.onTouch.add(function (entity) {
         let callback = this.callbacks[
             `onTouch:${entity.scene}:${entity.type}:${entity.id}`];
@@ -81,6 +87,10 @@ Story.prototype._setupIntro = function () {
     }.bind(this);
 
     this.callbacks['onUntouch:room00:artifact:0'] = function () {
+        this.tooltip.erase();
+    }.bind(this);
+
+    this.callbacks['onAction:room00:artifact:0'] = function () {
         this.tooltip.erase();
     }.bind(this);
 

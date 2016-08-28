@@ -18,7 +18,8 @@ PlayState.init = function () {
         onSceneEnter: new Phaser.Signal(),
         onPuzzleSucess: new Phaser.Signal(),
         onTouch: new Phaser.Signal(),
-        onUntouch: new Phaser.Signal()
+        onUntouch: new Phaser.Signal(),
+        onAction: new Phaser.Signal()
     };
     this.sfx = {};
     this.lastOverlap = null;
@@ -72,6 +73,7 @@ PlayState.create = function () {
     ];
     this.sfx.success = this.game.add.audio('sfx:ok');
     this.sfx.error = this.game.add.audio('sfx:error');
+    this.sfx.artifact = this.game.add.audio('sfx:artifact');
     this.minigameGroup = this.game.add.group();
 
     // this._spawnMusicBox(MusicBox.MELODIES.TEST);
@@ -107,6 +109,16 @@ PlayState._setupInput = function () {
     this.keys.space.onDown.add(function () {
         if (this.isControlFrozen) {
             this.typeWriter.next();
+        }
+        else if (this.lastOverlap !== null) {
+            if (this.lastOverlap.type === 'artifact') {
+                this.sfx.artifact.play();
+            }
+            this.events.onAction.dispatch({
+                scene: this.scene.key,
+                type: this.lastOverlap.type,
+                id: this.lastOverlap.id
+            });
         }
     }, this);
 };
