@@ -2,10 +2,13 @@
 
 var Scene = require('./world/scene.js');
 var Story = require('./world/story.js');
+var MusicBox = require('./world/music_box.js');
+
+var Heroine = require('./prefabs/heroine.js');
+
 var TypeWriter = require('./ui/type_writer.js');
 var Tooltip = require('./ui/tooltip.js');
 
-var Heroine = require('./prefabs/heroine.js');
 
 var PlayState = {};
 
@@ -48,10 +51,26 @@ PlayState.create = function () {
         this.isControlFrozen = false;
     }, this);
 
-    this.isControlFrozen = false;
+    this.isControlFrozen = true; // TODO: change to false
     this.story.start();
     // NOTE: always manually trigger onEnter in the first room
-    this.events.onSceneEnter.dispatch(this.scene.key);
+    // this.events.onSceneEnter.dispatch(this.scene.key);
+
+    // TODO: temp
+    let notes = [
+        this.game.add.audio('note:0'),
+        this.game.add.audio('note:1'),
+        this.game.add.audio('note:2'),
+        this.game.add.audio('note:3')
+    ];
+    this.minigameGroup = this.game.add.group();
+    this.musicBox = new MusicBox(this.minigameGroup, this.keys, notes);
+    // this.musicBox.play();
+    // TODO: use group.removeAll() to clear the music box
+    this.musicBox.events.onSuccess.add(function () {
+        console.log('SUCCESS!');
+    }, this);
+    this.musicBox.listen();
 };
 
 PlayState.update = function () {

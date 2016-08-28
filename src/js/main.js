@@ -31,12 +31,21 @@ var PreloaderState = {
         this.loadingBar.anchor.setTo(0, 0.5);
         this.load.setPreloadSprite(this.loadingBar);
 
+        // audio assets
+        this.game.load.audio('note:0', ['audio/note0.mp3', 'audio/note0.ogg']);
+        this.game.load.audio('note:1', ['audio/note1.mp3', 'audio/note1.ogg']);
+        this.game.load.audio('note:2', ['audio/note2.mp3', 'audio/note2.ogg']);
+        this.game.load.audio('note:3', ['audio/note3.mp3', 'audio/note3.ogg']);
+
         // image assets
         this.game.load.image('background', 'images/background.png');
         this.game.load.image('text_hud', 'images/text_hud.png');
         this.game.load.image('cloud', 'images/cloud.png');
         this.game.load.image('heroine', 'images/chara.png');
         this.game.load.image('font', 'images/font.png');
+        this.game.load.image('music_box_bg', 'images/music_box_bg.png');
+        this.game.load.spritesheet('music_gem', 'images/music_gems.png',
+            96, 96);
 
         // maps and tilesets
         this.game.load.image('tiles:world', 'images/world_elements.png');
