@@ -179,7 +179,18 @@ PlayState._setupStory = function () {
             this.game.state.start('play', true, false, sceneKey);
         }, this);
     }, this);
+
+    this.story.events.onShowEnding.add(function () {
+        this.isControlFrozen = true;
+        this.bgm.fadeOut(500);
+        this.bgm.onFadeComplete.addOnce(function () {
+            this.bgm.stop();
+            this.game.state.start('play', true, false, 'intro');
+        }, this);
+    }, this);
 };
+
+
 
 PlayState._spawnMusicBox = function (melodyKey) {
     this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx,

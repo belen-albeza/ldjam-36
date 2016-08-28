@@ -63,7 +63,7 @@ var PreloaderState = {
     },
 
     create: function () {
-        this.game.state.start('play', true, false, 'intro');
+        this.game.state.start('play', true, false, 'room00');
     }
 };
 

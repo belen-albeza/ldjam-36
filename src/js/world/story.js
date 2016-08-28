@@ -26,7 +26,8 @@ function Story(game, typeWriter, tooltip, gameEvents, sceneKey) {
         onFreezeControl: new Phaser.Signal(),
         onShowMusicBox: new Phaser.Signal(),
         onDisableCurrentEntity: new Phaser.Signal(),
-        onTeleport: new Phaser.Signal()
+        onTeleport: new Phaser.Signal(),
+        onShowEnding: new Phaser.Signal()
     };
 
     this.gameEvents.onPuzzleSuccess.add(function (puzzle) {
@@ -269,6 +270,7 @@ Story.prototype._setupBuilding = function () {
         this.writer.print();
         this.writer.events.onQueueFinish.addOnce(function () {
             this.events.onReleaseControl.dispatch();
+            this.events.onShowEnding.dispatch();
         }, this);
     }.bind(this);
 
