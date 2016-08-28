@@ -2,7 +2,19 @@
 
 var MusicGem = require('../prefabs/music_gem.js');
 
-function MusicBox(group, keys, audioNotes) {
+const MELODIES = {
+    TEST: [
+        {index: 0, start: 0, duration: 300},
+    ],
+    SANDMAN: [
+        {index: 0, start: 0, duration: 300},
+        {index: 3, start: 1000, duration: 300},
+        {index: 2, start: 1500, duration: 300},
+        {index: 1, start: 2000, duration: 300}
+    ]
+};
+
+function MusicBox(group, keys, audioNotes, melody) {
     this.game = group.game;
     this.group = group;
     this.keys = keys;
@@ -22,13 +34,7 @@ function MusicBox(group, keys, audioNotes) {
 
     this.group.position.setTo(this.game.width / 2 - bg.width / 2, 100);
 
-    // TODO: hardcoded temp
-    this.melody = [
-        {index: 0, start: 0, duration: 300},
-        {index: 3, start: 1000, duration: 300},
-        {index: 2, start: 1500, duration: 300},
-        {index: 1, start: 2000, duration: 300}
-    ];
+    this.melody = melody;
 }
 
 MusicBox.prototype.activate = function () {
@@ -52,8 +58,6 @@ MusicBox.prototype.play = function () {
 MusicBox.prototype.listen = function () {
     this.isListening = true;
     this.listenBuffer = [];
-    // this.timer = this.game.time.create(); // this will be autodestroyed
-    // this.timer.start();
 
     // bind up keys
     this.keys.left.onDown.add(this._recordNote0, this);
@@ -120,5 +124,7 @@ MusicBox.prototype._stopNote = function (index) {
     this.gems[index].animations.play('inactive');
 };
 
+
+MusicBox.MELODIES = MELODIES;
 
 module.exports = MusicBox;

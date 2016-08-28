@@ -66,7 +66,7 @@ PlayState.create = function () {
     ];
     this.minigameGroup = this.game.add.group();
 
-    this._spawnMusicBox();
+    this._spawnMusicBox(MusicBox.MELODIES.TEST);
 };
 
 PlayState.update = function () {
@@ -101,9 +101,10 @@ PlayState._setupInput = function () {
     }, this);
 };
 
-PlayState._spawnMusicBox = function () {
-    this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx.notes);
-    // TODO: use group.removeAll() to clear the music box
+PlayState._spawnMusicBox = function (melody) {
+    this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx.notes,
+        melody);
+
     this.musicBox.events.onSuccess.addOnce(function () {
         this._clearMusicBox();
         this.events.onPuzzleSucess.dispatch('musicbox');
