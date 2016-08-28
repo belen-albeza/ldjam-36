@@ -23,6 +23,18 @@ function Story(game, typeWriter, tooltip, gameEvents) {
         onFreezeControl: new Phaser.Signal()
     };
 
+    this.gameEvents.onTouch.add(function (entity) {
+        let callback = this.callbacks[
+            `onTouch:${entity.scene}:${entity.type}:${entity.id}`];
+        if (callback) { callback(); }
+    }, this);
+
+    this.gameEvents.onUntouch.add(function (entity) {
+        let callback = this.callbacks[
+            `onUntouch:${entity.scene}:${entity.type}:${entity.id}`];
+        if (callback) { callback(); }
+    }, this);
+
     this.gameEvents.onSceneEnter.add(function (sceneKey) {
         let wasVisited = this.visitedScenes[sceneKey] !== undefined;
         this.visitedScenes[sceneKey] = wasVisited ?
@@ -64,6 +76,14 @@ Story.prototype.commitPage = function () {
 };
 
 Story.prototype._setupIntro = function () {
+    this.callbacks['onTouch:room00:artifact:0'] = function () {
+        this.tooltip.write('Press <SPACEBAR> to interact.');
+    }.bind(this);
+
+    this.callbacks['onUntouch:room00:artifact:0'] = function () {
+        this.tooltip.erase();
+    }.bind(this);
+
     this.callbacks['onSceneFirstEnter:room00'] = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'What... is this?');

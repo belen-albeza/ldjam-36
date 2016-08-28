@@ -48,6 +48,7 @@ var PreloaderState = {
         this.game.load.image('music_box_bg', 'images/music_box_bg.png');
         this.game.load.spritesheet('music_gem', 'images/music_gems.png',
             96, 96);
+        this.game.load.spritesheet('artifact', 'images/artifact.png', 32, 64);
 
         // maps and tilesets
         this.game.load.image('tiles:world', 'images/world_elements.png');

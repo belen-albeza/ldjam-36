@@ -16,9 +16,12 @@ PlayState.init = function () {
     this.events = {
         onHeroineMove: new Phaser.Signal(),
         onSceneEnter: new Phaser.Signal(),
-        onPuzzleSucess: new Phaser.Signal()
+        onPuzzleSucess: new Phaser.Signal(),
+        onTouch: new Phaser.Signal(),
+        onUntouch: new Phaser.Signal()
     };
     this.sfx = {};
+    this.lastOverlap = null;
 };
 
 PlayState.create = function () {
@@ -26,8 +29,9 @@ PlayState.create = function () {
     background.fixedToCamera = true;
 
     let attrezzo = this.game.add.group();
-    this.scene = new Scene(this.game, 'room00', attrezzo);
     this.characters = this.game.add.group();
+    this.gameObjects = this.characters.add(new Phaser.Group(this.game));
+    this.scene = new Scene(this.game, 'room00', attrezzo, this.gameObjects);
 
     let textHudGroup = this.game.add.group();
     let hudBackground = textHudGroup.add(new Phaser.Image(this.game, 0, 512,
@@ -37,10 +41,12 @@ PlayState.create = function () {
     this.typeWriter = new TypeWriter(textHudGroup, 8, 426);
     this.tooltip = new Tooltip(textHudGroup, 400, 506);
     this.tooltip.lineImage.anchor.setTo(0.5, 1);
+    this.cursorTooltip = new Tooltip(textHudGroup, 400, 426);
+    this.cursorTooltip.lineImage.anchor.setTo(0.5, 0);
 
     this._setupInput();
 
-    this.heroine = new Heroine(this.game, 100, 384);
+    this.heroine = new Heroine(this.game, 32, 384);
     this.characters.add(this.heroine);
     this.game.camera.follow(this.heroine);
 
@@ -53,7 +59,7 @@ PlayState.create = function () {
         this.isControlFrozen = false;
     }, this);
 
-    this.isControlFrozen = true; // TODO: change to false
+    this.isControlFrozen = false;
     this.story.start();
     // NOTE: always manually trigger onEnter in the first room
     // this.events.onSceneEnter.dispatch(this.scene.key);
@@ -68,7 +74,7 @@ PlayState.create = function () {
     this.sfx.error = this.game.add.audio('sfx:error');
     this.minigameGroup = this.game.add.group();
 
-    this._spawnMusicBox(MusicBox.MELODIES.TEST);
+    // this._spawnMusicBox(MusicBox.MELODIES.TEST);
 };
 
 PlayState.update = function () {
@@ -83,6 +89,8 @@ PlayState.update = function () {
     else {
         this.heroine.move(0);
     }
+
+    PlayState._handleCollisions();
 };
 
 PlayState.render = function () {
@@ -118,6 +126,42 @@ PlayState._spawnMusicBox = function (melody) {
 PlayState._clearMusicBox = function () {
     this.musicBox = null;
     this.minigameGroup.removeAll();
+};
+
+PlayState._handleCollisions = function () {
+    this.cursorTooltip.erase();
+    let oldOverlap = this.lastOverlap;
+    let overlapping = false;
+
+    // TODO: this assumes ONLY one overlap at a given frame… it probably should
+    //       be more flexible!
+    this.game.physics.arcade.overlap(this.heroine, this.gameObjects,
+    function (heroine, object) {
+        let entityData = {
+            scene: this.scene.key,
+            type: object.type,
+            id: object.id
+        };
+
+        this.cursorTooltip.write(object.type, Tooltip.COLORS.WHITE);
+
+        // wasn't overlapping last frame
+        if (this.lastOverlap !== object) {
+            this.events.onTouch.dispatch(entityData);
+        }
+        this.lastOverlap = object;
+        overlapping = true;
+    }, null, this);
+
+    if (!overlapping) { this.lastOverlap = null; }
+
+    if (oldOverlap !== this.lastOverlap && oldOverlap !== null) {
+        this.events.onUntouch.dispatch({
+            scene: this.scene.key,
+            type: oldOverlap.type,
+            id: oldOverlap.id
+        });
+    }
 };
 
 module.exports = PlayState;

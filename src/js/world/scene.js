@@ -1,8 +1,14 @@
 'use strict';
 
 var Cloud = require('../prefabs/cloud.js');
+var Artifact = require('../prefabs/artifact.js');
 
-const LAYERS = ['background00', 'background01', 'foreground00', 'foreground01'];
+const TILES = [
+    { gid: 106, sprite: Artifact, args: { artifactId: 0 } }
+];
+
+
+const LAYERS = ['background01', 'foreground00', 'foreground01', 'logic'];
 
 function getPositionFromIndex(data, index) {
     return {
@@ -11,7 +17,7 @@ function getPositionFromIndex(data, index) {
     };
 }
 
-function Scene(game, sceneKey, attrezzoGroup) {
+function Scene(game, sceneKey, attrezzoGroup, spritesGroup) {
     this.game = game;
     this.key = sceneKey;
     var data = JSON.parse(game.cache.getText(`map:${sceneKey}`));
@@ -28,9 +34,21 @@ function Scene(game, sceneKey, attrezzoGroup) {
         // fill layer with tile data
         let tiles = data.layers.find(x => x.name === layerName).data;
         tiles.forEach(function (tile, index) {
+            if (tile === -1) { return; }
+
             let position = getPositionFromIndex(data, index);
-            if (tile !== -1) {
+            if (layerName !== 'logic') {
                 this.map.putTile(tile, position.col, position.row, l);
+            }
+            else {
+                let entity = TILES.find(x => x.gid === tile);
+                if (entity) {
+                    spritesGroup.add(new entity.sprite(
+                        this.game,
+                        position.col * data.tilewidth + data.tilewidth / 2,
+                        (position.row + 1) * data.tileheight,
+                        entity.args));
+                }
             }
         }, this);
 
@@ -38,6 +56,7 @@ function Scene(game, sceneKey, attrezzoGroup) {
     }, this);
 
     this.layers[0].resizeWorld();
+    this.layers[this.layers.length-1].visible = false; // hide logic layer
 
     this._spawnAttrezzo(attrezzoGroup);
 }

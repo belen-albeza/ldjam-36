@@ -31,7 +31,10 @@ Tooltip.prototype.write = function (text, color) {
 
 Tooltip.prototype.erase = function () {
     this.lineImage.visible = false;
+    this.lineFont.text = '';
 };
+
+Tooltip.COLORS = COLORS;
 
 
 module.exports = Tooltip;
