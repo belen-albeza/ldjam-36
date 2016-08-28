@@ -64,6 +64,8 @@ PlayState.create = function () {
         this.game.add.audio('note:2'),
         this.game.add.audio('note:3')
     ];
+    this.sfx.success = this.game.add.audio('sfx:ok');
+    this.sfx.error = this.game.add.audio('sfx:error');
     this.minigameGroup = this.game.add.group();
 
     this._spawnMusicBox(MusicBox.MELODIES.TEST);
@@ -102,7 +104,7 @@ PlayState._setupInput = function () {
 };
 
 PlayState._spawnMusicBox = function (melody) {
-    this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx.notes,
+    this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx,
         melody);
 
     this.musicBox.events.onSuccess.addOnce(function () {

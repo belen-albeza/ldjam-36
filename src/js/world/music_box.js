@@ -14,7 +14,7 @@ const MELODIES = {
     ]
 };
 
-function MusicBox(group, keys, audioNotes, melody) {
+function MusicBox(group, keys, sfx, melody) {
     this.game = group.game;
     this.group = group;
     this.keys = keys;
@@ -22,7 +22,8 @@ function MusicBox(group, keys, audioNotes, melody) {
         onSuccess: new Phaser.Signal(),
         onFailure: new Phaser.Signal()
     };
-    this.audioNotes = audioNotes;
+    this.sfx = sfx;
+    this.sfx.notes = sfx.notes;
 
     let bg = this.group.add(new Phaser.Image(this.game, 0, 0, 'music_box_bg'));
     this.gems = [
@@ -80,23 +81,24 @@ MusicBox.prototype._recordNote3 = function () { this._recordNote(3); };
 
 MusicBox.prototype._recordNote = function (index) {
     this.listenBuffer.push(index);
-    this._playNote(index);
 
     if (this.melody[this.listenBuffer.length -1].index === index) {
         // success!
+        this._playNote(index);
         if (this.listenBuffer.length === this.melody.length) {
-            this._showSuccess();
             this.cleanUpEvents();
-            this.game.time.events.add(1000, function () {
+            this.game.time.events.add(800, this._showSuccess, this);
+            this.game.time.events.add(1500, function () {
                 this.events.onSuccess.dispatch();
             }, this);
         }
     }
     else {
         // error
-        this._showError();
+        this._playNote(index, true);
         this.cleanUpEvents();
-        this.game.time.events.add(1000, function () {
+        this.game.time.events.add(800, this._showError, this);
+        this.game.time.events.add(1500, function () {
             this.events.onFailure.dispatch();
             this.play();
         }, this);
@@ -104,20 +106,22 @@ MusicBox.prototype._recordNote = function (index) {
 };
 
 MusicBox.prototype._showSuccess = function () {
+    this.sfx.success.play();
     this.gems.forEach(function (gem) {
         gem.animations.play('success');
     });
 };
 
 MusicBox.prototype._showError = function () {
+    this.sfx.error.play();
     this.gems.forEach(function (gem) {
         gem.animations.play('error');
     });
 };
 
-MusicBox.prototype._playNote = function (index) {
-    this.gems[index].animations.play('active');
-    this.audioNotes[index].play();
+MusicBox.prototype._playNote = function (index, isError) {
+    this.gems[index].animations.play(isError ? 'wrong' : 'active');
+    this.sfx.notes[index].play();
 };
 
 MusicBox.prototype._stopNote = function (index) {
