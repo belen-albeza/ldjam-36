@@ -8,8 +8,9 @@ body {
   margin: 0;
   font-family: Courier, 'Courier New', monospace;
   font-size: 1.6rem;
-  background: #306082;
-  color: #000;
+  /*background: #306082;*/
+  background: #000;
+  color: #fff;
 }
 
 a {
@@ -50,7 +51,7 @@ footer p:last-child {
 
 .fullscreen {
     padding: 0;
-    background: rgba(0, 0, 0, 0.10);
+    background: rgba(255, 255, 255, 0.5);
     border: none;
     line-height: 20px;
     display: inline-block;
@@ -58,7 +59,7 @@ footer p:last-child {
 
 .fullscreen:hover {
     cursor: pointer;
-    background: rgba(0, 0, 0, 0.20);
+    background: rgba(255, 255, 255, 0.8);
 }
 
 .fullscreen img {

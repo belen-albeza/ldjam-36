@@ -2,6 +2,7 @@
 'use strict';
 
 var PlayState = require('./play_state.js');
+var TitleState = require('./title_state.js');
 
 var BootState = {
     init: function () {
@@ -64,7 +65,7 @@ var PreloaderState = {
     },
 
     create: function () {
-        this.game.state.start('play', true, false, 'intro');
+        this.game.state.start('title');
     }
 };
 
@@ -74,12 +75,13 @@ window.onload = function () {
 
     game.state.add('boot', BootState);
     game.state.add('preloader', PreloaderState);
+    game.state.add('title', TitleState);
     game.state.add('play', PlayState);
 
     game.state.start('boot');
 };
 
-},{"./play_state.js":2}],2:[function(require,module,exports){
+},{"./play_state.js":2,"./title_state.js":8}],2:[function(require,module,exports){
 'use strict';
 
 var Scene = require('./world/scene.js');
@@ -261,7 +263,18 @@ PlayState._setupStory = function () {
             this.game.state.start('play', true, false, sceneKey);
         }, this);
     }, this);
+
+    this.story.events.onShowEnding.add(function () {
+        this.isControlFrozen = true;
+        this.bgm.fadeOut(500);
+        this.bgm.onFadeComplete.addOnce(function () {
+            this.bgm.stop();
+            this.game.state.start('title');
+        }, this);
+    }, this);
 };
+
+
 
 PlayState._spawnMusicBox = function (melodyKey) {
     this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx,
@@ -301,7 +314,7 @@ PlayState._handleCollisions = function () {
             id: object.id
         };
 
-        this.cursorTooltip.write(object.name, Tooltip.COLORS.GRAY);
+        this.cursorTooltip.write(object.name, Tooltip.COLORS.PURPLE);
 
         // wasn't overlapping last frame
         if (this.lastOverlap !== object) {
@@ -331,7 +344,7 @@ PlayState._findEntity = function (type, id) {
 
 module.exports = PlayState;
 
-},{"./prefabs/heroine.js":6,"./ui/tooltip.js":8,"./ui/type_writer.js":9,"./world/music_box.js":10,"./world/scene.js":11,"./world/story.js":12}],3:[function(require,module,exports){
+},{"./prefabs/heroine.js":6,"./ui/tooltip.js":9,"./ui/type_writer.js":10,"./world/music_box.js":11,"./world/scene.js":12,"./world/story.js":13}],3:[function(require,module,exports){
 'use strict';
 
 function Artifact(game, x, y, args) {
@@ -469,6 +482,61 @@ module.exports = MusicGem;
 },{}],8:[function(require,module,exports){
 'use strict';
 
+var Cloud = require('./prefabs/cloud.js');
+
+var TitleState = {};
+
+const TEXT = [
+    { txt: 'The Language of the Gods', offset: 0 },
+    { txt: 'by', offset: 2 },
+    { txt: '@ladybenko', offset: 3}
+];
+
+
+TitleState.init = function () {
+    this.game.stage.setBackgroundColor(0xeec39a);
+};
+
+TitleState.create = function () {
+    // this.game.world.resize(this.game.width, this.game.height);
+    this.game.world.setBounds(0, 0, this.game.width, this.game.height);
+    this.game.add.image(0, 0, 'background');
+    let group = this.game.add.group();
+
+    this.lines = TEXT.map(function (line) {
+        let font = this.game.add.retroFont('font', 16, 24,
+            Phaser.RetroFont.TEXT_SET2.replace(' ', '') + ' ');
+        font.text = line.txt;
+
+        let img = this.game.add.image(
+            this.game.world.width / 2, 160 + line.offset * 32, font);
+        img.anchor.setTo(0.5, 0);
+        img.tint = 0x45283c;
+    }, this);
+
+    let font = this.game.add.retroFont('font', 16, 24,
+        Phaser.RetroFont.TEXT_SET2.replace(' ', '') + ' ');
+    font.text = 'Press <SPACEBAR> to start';
+    let tip = this.game.add.image(this.game.world.width / 2, 496, font);
+    tip.anchor.setTo(0.5, 1);
+    tip.tint = 0x595652;
+
+    group.add(new Cloud(this.game, 100, 130));
+    group.add(new Cloud(this.game, 500, 250));
+    group.add(new Cloud(this.game, 1200, 80));
+
+    let space = this.game.input.keyboard.addKey(Phaser.KeyCode.SPACEBAR);
+    this.game.input.keyboard.addKeyCapture([Phaser.KeyCode.SPACEBAR]);
+    space.onUp.add(function () {
+        this.game.state.start('play', true, false, 'intro');
+    }, this);
+};
+
+module.exports = TitleState;
+
+},{"./prefabs/cloud.js":4}],9:[function(require,module,exports){
+'use strict';
+
 // TODO: refactor with colors of TypeWriter
 const COLORS = {
    GRAY: 0x595652,
@@ -479,7 +547,8 @@ const COLORS = {
    AQUA: 0x5fcde4,
    EMERALD: 0x37946e,
    ORANGE: 0xdf7126,
-   BLACK: 0x000000
+   BLACK: 0x000000,
+   PURPLE: 0x45283c
 };
 
 function Tooltip(group, x, y) {
@@ -508,7 +577,7 @@ Tooltip.COLORS = COLORS;
 
 module.exports = Tooltip;
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 const LINE_COUNT = 3;
@@ -587,7 +656,7 @@ TypeWriter.LINE_COUNT = 3;
 
 module.exports = TypeWriter;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 var MusicGem = require('../prefabs/music_gem.js');
@@ -740,7 +809,7 @@ MusicBox.MELODIES = MELODIES;
 
 module.exports = MusicBox;
 
-},{"../prefabs/music_gem.js":7}],11:[function(require,module,exports){
+},{"../prefabs/music_gem.js":7}],12:[function(require,module,exports){
 'use strict';
 
 var Cloud = require('../prefabs/cloud.js');
@@ -816,7 +885,7 @@ Scene.prototype._spawnAttrezzo = function (group) {
 
 module.exports = Scene;
 
-},{"../prefabs/artifact.js":3,"../prefabs/cloud.js":4,"../prefabs/decoration.js":5}],12:[function(require,module,exports){
+},{"../prefabs/artifact.js":3,"../prefabs/cloud.js":4,"../prefabs/decoration.js":5}],13:[function(require,module,exports){
 'use strict';
 
 var TypeWriter = require('../ui/type_writer.js');
@@ -845,7 +914,8 @@ function Story(game, typeWriter, tooltip, gameEvents, sceneKey) {
         onFreezeControl: new Phaser.Signal(),
         onShowMusicBox: new Phaser.Signal(),
         onDisableCurrentEntity: new Phaser.Signal(),
-        onTeleport: new Phaser.Signal()
+        onTeleport: new Phaser.Signal(),
+        onShowEnding: new Phaser.Signal()
     };
 
     this.gameEvents.onPuzzleSuccess.add(function (puzzle) {
@@ -1088,6 +1158,7 @@ Story.prototype._setupBuilding = function () {
         this.writer.print();
         this.writer.events.onQueueFinish.addOnce(function () {
             this.events.onReleaseControl.dispatch();
+            this.events.onShowEnding.dispatch();
         }, this);
     }.bind(this);
 
@@ -1119,4 +1190,4 @@ Story.prototype._setupBuilding = function () {
 
 module.exports = Story;
 
-},{"../ui/type_writer.js":9}]},{},[1]);
+},{"../ui/type_writer.js":10}]},{},[1]);
