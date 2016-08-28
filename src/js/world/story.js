@@ -16,12 +16,21 @@ function Story(game, typeWriter, tooltip, gameEvents) {
     this.gameEvents = gameEvents;
     this.callbacks = {};
     this.visitedScenes = {};
+    this.globals = {};
 
     this.textBuffer = [];
     this.events = {
         onReleaseControl: new Phaser.Signal(),
-        onFreezeControl: new Phaser.Signal()
+        onFreezeControl: new Phaser.Signal(),
+        onShowMusicBox: new Phaser.Signal(),
+        onDisableCurrentEntity: new Phaser.Signal()
     };
+
+    this.gameEvents.onPuzzleSuccess.add(function (puzzle) {
+        let callback = this.callbacks[
+            `onPuzzleSuccess:${puzzle.type}:${puzzle.key}`];
+        if (callback) { callback(); }
+    }, this);
 
     this.gameEvents.onAction.add(function (entity) {
         let callback = this.callbacks[
@@ -83,7 +92,27 @@ Story.prototype.commitPage = function () {
 
 Story.prototype._setupIntro = function () {
     this.callbacks['onTouch:room00:artifact:0'] = function () {
-        this.tooltip.write('Press <SPACEBAR> to interact.');
+        if (!this.globals.sawArtifact) {
+            this.events.onFreezeControl.dispatch();
+            this.speak(CHARAS.HEROINE, 'What is this thing?');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'It looks like some kind of artifact.');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'I don\'t know why, but I have the impression');
+            this.speak(CHARAS.HEROINE, 'that it is ancient.');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'What will happen if I touch it?');
+            this.commitPage();
+            this.writer.print();
+            this.writer.events.onQueueFinish.addOnce(function () {
+                this.events.onReleaseControl.dispatch();
+                this.globals.sawArtifact = true;
+                this.tooltip.write('Press <SPACEBAR> to interact.');
+            }, this);
+        }
+        else {
+            this.tooltip.write('Press <SPACEBAR> to interact.');
+        }
     }.bind(this);
 
     this.callbacks['onUntouch:room00:artifact:0'] = function () {
@@ -92,6 +121,20 @@ Story.prototype._setupIntro = function () {
 
     this.callbacks['onAction:room00:artifact:0'] = function () {
         this.tooltip.erase();
+        this.events.onShowMusicBox.dispatch('TEST');
+        this.events.onDisableCurrentEntity.dispatch();
+    }.bind(this);
+
+    this.callbacks['onPuzzleSuccess:musicbox:TEST'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'That was easy!');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'But has it changed anything?');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+        }, this);
     }.bind(this);
 
     this.callbacks['onSceneFirstEnter:room00'] = function () {

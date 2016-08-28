@@ -5,6 +5,7 @@ function Artifact(game, x, y, args) {
 
     this.anchor.setTo(0.5, 1);
     this.frame = 0;
+    this.animations.add('activate', [0, 1, 2, 0], 10);
 
     this.type = 'artifact';
     this.id = args.artifactId;

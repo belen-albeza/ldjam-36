@@ -16,7 +16,7 @@ PlayState.init = function () {
     this.events = {
         onHeroineMove: new Phaser.Signal(),
         onSceneEnter: new Phaser.Signal(),
-        onPuzzleSucess: new Phaser.Signal(),
+        onPuzzleSuccess: new Phaser.Signal(),
         onTouch: new Phaser.Signal(),
         onUntouch: new Phaser.Signal(),
         onAction: new Phaser.Signal()
@@ -42,7 +42,7 @@ PlayState.create = function () {
     this.typeWriter = new TypeWriter(textHudGroup, 8, 426);
     this.tooltip = new Tooltip(textHudGroup, 400, 506);
     this.tooltip.lineImage.anchor.setTo(0.5, 1);
-    this.cursorTooltip = new Tooltip(textHudGroup, 400, 426);
+    this.cursorTooltip = new Tooltip(textHudGroup, 400, 390);
     this.cursorTooltip.lineImage.anchor.setTo(0.5, 0);
 
     this._setupInput();
@@ -51,14 +51,7 @@ PlayState.create = function () {
     this.characters.add(this.heroine);
     this.game.camera.follow(this.heroine);
 
-    this.story = new Story(this.game, this.typeWriter, this.tooltip,
-        this.events);
-    this.story.events.onFreezeControl.add(function () {
-        this.isControlFrozen = true;
-    }, this);
-    this.story.events.onReleaseControl.add(function () {
-        this.isControlFrozen = false;
-    }, this);
+    this._setupStory();
 
     this.isControlFrozen = false;
     this.story.start();
@@ -110,29 +103,60 @@ PlayState._setupInput = function () {
         if (this.isControlFrozen) {
             this.typeWriter.next();
         }
-        else if (this.lastOverlap !== null) {
+        else if (this.lastOverlap !== null && !this.lastOverlap.disabled) {
+            this.isControlFrozen = true;
+
             if (this.lastOverlap.type === 'artifact') {
                 this.sfx.artifact.play();
+                this.lastOverlap.animations.play('activate');
             }
-            this.events.onAction.dispatch({
-                scene: this.scene.key,
-                type: this.lastOverlap.type,
-                id: this.lastOverlap.id
-            });
+            // wait a bit for sfx and animation to be played
+            this.game.time.events.add(300, function () {
+                this.isControlFrozen = false;
+                this.events.onAction.dispatch({
+                    scene: this.scene.key,
+                    type: this.lastOverlap.type,
+                    id: this.lastOverlap.id
+                });
+            }, this);
         }
     }, this);
 };
 
-PlayState._spawnMusicBox = function (melody) {
+PlayState._setupStory = function () {
+    this.story = new Story(this.game, this.typeWriter, this.tooltip,
+        this.events);
+
+    this.story.events.onFreezeControl.add(function () {
+        this.isControlFrozen = true;
+    }, this);
+    this.story.events.onReleaseControl.add(function () {
+        this.isControlFrozen = false;
+    }, this);
+    this.story.events.onDisableCurrentEntity.add(function () {
+        if (this.lastOverlap) {
+            this.lastOverlap.disabled = true;
+        }
+    }, this);
+    this.story.events.onShowMusicBox.add(function (melodyKey) {
+        this.isControlFrozen = true;
+        this._spawnMusicBox(melodyKey);
+    }, this);
+};
+
+PlayState._spawnMusicBox = function (melodyKey) {
     this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx,
-        melody);
+        MusicBox.MELODIES[melodyKey]);
 
     this.musicBox.events.onSuccess.addOnce(function () {
         this._clearMusicBox();
-        this.events.onPuzzleSucess.dispatch('musicbox');
+        this.isControlFrozen = false;
+        this.events.onPuzzleSuccess.dispatch({type: 'musicbox', key: melodyKey});
     }, this);
 
-    this.musicBox.play();
+    this.game.time.events.add(1000, function () {
+        this.musicBox.play();
+    }, this);
 };
 
 PlayState._clearMusicBox = function () {
@@ -163,7 +187,7 @@ PlayState._handleCollisions = function () {
         }
         this.lastOverlap = object;
         overlapping = true;
-    }, null, this);
+    }, (h, o) => !o.disabled, this);
 
     if (!overlapping) { this.lastOverlap = null; }
 
@@ -174,6 +198,13 @@ PlayState._handleCollisions = function () {
             id: oldOverlap.id
         });
     }
+};
+
+PlayState._findEntity = function (type, id) {
+    let found = this.gameObjects.filter(function (entity) {
+       return entity.type === type && entity.id === id;
+    });
+    return found.first;
 };
 
 module.exports = PlayState;
