@@ -1028,14 +1028,8 @@ Story.prototype._setupBuilding = function () {
         this.speak(CHARAS.GOD, 'I am who I am.');
         this.commitPage();
         this.writer.print();
-        this.tooltip.write('Press <SPACEBAR> to continue.');
-
         this.writer.events.onQueueFinish.addOnce(function () {
-            this.tooltip.write('Press <ARROW KEYS> to move left and right.');
             this.events.onReleaseControl.dispatch();
-            this.gameEvents.onHeroineMove.addOnce(function () {
-                this.tooltip.erase();
-            }, this);
         }, this);
     }.bind(this);
 
