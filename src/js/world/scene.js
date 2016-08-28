@@ -4,7 +4,8 @@ var Cloud = require('../prefabs/cloud.js');
 var Artifact = require('../prefabs/artifact.js');
 
 const TILES = [
-    { gid: 106, sprite: Artifact, args: { artifactId: 0 } }
+    { gid: 106, sprite: Artifact, args: { artifactId: 0 } },
+    { gid: 107, sprite: Artifact, args: { artifactId: 1 } }
 ];
 
 

@@ -58,7 +58,7 @@ PlayState.create = function () {
     this.isControlFrozen = false;
     this.story.start();
     // NOTE: always manually trigger onEnter in the first room
-    // this.events.onSceneEnter.dispatch(this.scene.key);
+    this.events.onSceneEnter.dispatch(this.scene.key);
 
     this.sfx.notes = [
         this.game.add.audio('note:0'),

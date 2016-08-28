@@ -115,8 +115,17 @@ Story.prototype._setupIntro = function () {
         }
     }.bind(this);
 
-    this.callbacks['onUntouch:room00:artifact:0'] = function () {
-        this.tooltip.erase();
+    this.callbacks['onAction:room00:artifact:1'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'Another of these artifacts...');
+        this.speak(CHARAS.HEROINE, 'Let\'s solve this!');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+            this.events.onShowMusicBox.dispatch('SANDMAN');
+            this.events.onDisableCurrentEntity.dispatch();
+        }, this);
     }.bind(this);
 
     this.callbacks['onAction:room00:artifact:0'] = function () {
@@ -130,6 +139,25 @@ Story.prototype._setupIntro = function () {
         this.speak(CHARAS.HEROINE, 'That was easy!');
         this.commitPage();
         this.speak(CHARAS.HEROINE, 'But has it changed anything?');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+        }, this);
+    }.bind(this);
+
+    this.callbacks['onPuzzleSuccess:musicbox:SANDMAN'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.GOD, 'Was this short? You bet!');
+        this.commitPage();
+        this.speak(CHARAS.GOD, 'As you can see, I\'m in a real hurry');
+        this.speak(CHARAS.GOD, 'to finish on time.');
+        this.commitPage();
+        this.speak(CHARAS.GOD, 'Please cheer me up on Twitter!');
+        this.speak(CHARAS.GOD, 'Thanks <3');
+        this.speak(CHARAS.GOD, '@ladybenko');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'What the hell was that?');
         this.commitPage();
         this.writer.print();
         this.writer.events.onQueueFinish.addOnce(function () {

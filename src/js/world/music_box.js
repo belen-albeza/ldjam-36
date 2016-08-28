@@ -26,14 +26,21 @@ function MusicBox(group, keys, sfx, melody) {
     this.sfx.notes = sfx.notes;
 
     let bg = this.group.add(new Phaser.Image(this.game, 0, 0, 'music_box_bg'));
+
+    let offsetx = this.game.width / 2 - bg.width / 2;
+    let offsety = 100;
+
+    bg.position.setTo(offsetx, offsety);
+
     this.gems = [
-        this.group.add(new MusicGem(this.game, 32, 32)),
-        this.group.add(new MusicGem(this.game, 160, 32)),
-        this.group.add(new MusicGem(this.game, 288, 32)),
-        this.group.add(new MusicGem(this.game, 416, 32))
+        this.group.add(new MusicGem(this.game, offsetx + 32, offsety + 40)),
+        this.group.add(new MusicGem(this.game, offsetx + 160, offsety + 40)),
+        this.group.add(new MusicGem(this.game, offsetx + 288, offsety + 40)),
+        this.group.add(new MusicGem(this.game, offsetx + 416, offsety + 40))
     ];
 
-    this.group.position.setTo(this.game.width / 2 - bg.width / 2, 100);
+    // this.group.position.setTo(this.game.width / 2 - bg.width / 2, 100);
+    this.group.fixedToCamera = true;
 
     this.melody = melody;
 }
