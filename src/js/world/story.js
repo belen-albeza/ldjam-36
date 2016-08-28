@@ -196,7 +196,7 @@ Story.prototype._setupIntro = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'That was easy!');
         this.commitPage();
-        this.speak(CHARAS.HEROINE, 'But has it changed anything?');
+        this.speak(CHARAS.HEROINE, 'But what use is this?');
         this.commitPage();
         this.writer.print();
         this.writer.events.onQueueFinish.addOnce(function () {
@@ -212,7 +212,7 @@ Story.prototype._setupBuilding = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'What happened?!');
         this.commitPage();
-        this.speak(CHARAS.HEROINE, 'I am in a different place now');
+        this.speak(CHARAS.HEROINE, 'I am in a different place now.');
         this.commitPage();
         this.speak(CHARAS.HEROINE, 'Is this real?');
         this.commitPage();

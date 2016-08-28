@@ -124,7 +124,7 @@ PlayState._setupInput = function () {
         Phaser.KeyCode.DOWN, Phaser.KeyCode.LEFT, Phaser.KeyCode.RIGHT,
         Phaser.KeyCode.SPACEBAR]);
 
-    this.keys.space.onDown.add(function () {
+    this.keys.space.onUp.add(function () {
         if (this.isControlFrozen) {
             this.typeWriter.next();
         }
