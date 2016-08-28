@@ -8,7 +8,7 @@ function MusicBox(group, keys, audioNotes) {
     this.keys = keys;
     this.events = {
         onSuccess: new Phaser.Signal(),
-        onFail: new Phaser.Signal()
+        onFailure: new Phaser.Signal()
     };
     this.audioNotes = audioNotes;
 
@@ -45,6 +45,8 @@ MusicBox.prototype.play = function () {
             note.index);
     }, this);
     this.timer.start();
+
+    this.timer.onComplete.addOnce(this.listen, this);
 };
 
 MusicBox.prototype.listen = function () {
@@ -75,10 +77,36 @@ MusicBox.prototype._recordNote3 = function () { this._recordNote(3); };
 MusicBox.prototype._recordNote = function (index) {
     this.listenBuffer.push(index);
     this._playNote(index);
-    if (this.listenBuffer.length === this.melody.length) {
-        this.events.onSuccess.dispatch();
-        this.cleanUpEvents();
+
+    if (this.melody[this.listenBuffer.length -1].index === index) {
+        // success!
+        if (this.listenBuffer.length === this.melody.length) {
+            this._showSuccess();
+            this.cleanUpEvents();
+            this.game.time.events.add(1000, this.events.onSuccess.dispatch);
+        }
     }
+    else {
+        // error
+        this._showError();
+        this.cleanUpEvents();
+        this.game.time.events.add(1000, function () {
+            this.events.onFailure.dispatch();
+            this.play();
+        }, this);
+    }
+};
+
+MusicBox.prototype._showSuccess = function () {
+    this.gems.forEach(function (gem) {
+        gem.animations.play('success');
+    });
+}
+
+MusicBox.prototype._showError = function () {
+    this.gems.forEach(function (gem) {
+        gem.animations.play('error');
+    });
 };
 
 MusicBox.prototype._playNote = function (index) {

@@ -65,12 +65,12 @@ PlayState.create = function () {
     ];
     this.minigameGroup = this.game.add.group();
     this.musicBox = new MusicBox(this.minigameGroup, this.keys, notes);
-    // this.musicBox.play();
     // TODO: use group.removeAll() to clear the music box
     this.musicBox.events.onSuccess.add(function () {
         console.log('SUCCESS!');
     }, this);
-    this.musicBox.listen();
+    this.musicBox.play();
+    // this.musicBox.listen();
 };
 
 PlayState.update = function () {
