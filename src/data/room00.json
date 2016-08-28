@@ -11669,7 +11669,7 @@
                 {
                     "flipX": false,
                     "y": 10,
-                    "tile": 63,
+                    "tile": 110,
                     "rot": 0,
                     "index": 416,
                     "x": 16
@@ -11989,7 +11989,7 @@
                 {
                     "flipX": false,
                     "y": 11,
-                    "tile": 63,
+                    "tile": 111,
                     "rot": 0,
                     "index": 456,
                     "x": 16
