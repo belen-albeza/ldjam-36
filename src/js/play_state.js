@@ -15,8 +15,10 @@ var PlayState = {};
 PlayState.init = function () {
     this.events = {
         onHeroineMove: new Phaser.Signal(),
-        onSceneEnter: new Phaser.Signal()
+        onSceneEnter: new Phaser.Signal(),
+        onPuzzleSucess: new Phaser.Signal()
     };
+    this.sfx = {};
 };
 
 PlayState.create = function () {
@@ -56,21 +58,15 @@ PlayState.create = function () {
     // NOTE: always manually trigger onEnter in the first room
     // this.events.onSceneEnter.dispatch(this.scene.key);
 
-    // TODO: temp
-    let notes = [
+    this.sfx.notes = [
         this.game.add.audio('note:0'),
         this.game.add.audio('note:1'),
         this.game.add.audio('note:2'),
         this.game.add.audio('note:3')
     ];
     this.minigameGroup = this.game.add.group();
-    this.musicBox = new MusicBox(this.minigameGroup, this.keys, notes);
-    // TODO: use group.removeAll() to clear the music box
-    this.musicBox.events.onSuccess.add(function () {
-        console.log('SUCCESS!');
-    }, this);
-    this.musicBox.play();
-    // this.musicBox.listen();
+
+    this._spawnMusicBox();
 };
 
 PlayState.update = function () {
@@ -103,6 +99,22 @@ PlayState._setupInput = function () {
             this.typeWriter.next();
         }
     }, this);
+};
+
+PlayState._spawnMusicBox = function () {
+    this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx.notes);
+    // TODO: use group.removeAll() to clear the music box
+    this.musicBox.events.onSuccess.addOnce(function () {
+        this._clearMusicBox();
+        this.events.onPuzzleSucess.dispatch('musicbox');
+    }, this);
+
+    this.musicBox.play();
+};
+
+PlayState._clearMusicBox = function () {
+    this.musicBox = null;
+    this.minigameGroup.removeAll();
 };
 
 module.exports = PlayState;

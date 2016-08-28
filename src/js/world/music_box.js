@@ -83,7 +83,9 @@ MusicBox.prototype._recordNote = function (index) {
         if (this.listenBuffer.length === this.melody.length) {
             this._showSuccess();
             this.cleanUpEvents();
-            this.game.time.events.add(1000, this.events.onSuccess.dispatch);
+            this.game.time.events.add(1000, function () {
+                this.events.onSuccess.dispatch();
+            }, this);
         }
     }
     else {
@@ -101,7 +103,7 @@ MusicBox.prototype._showSuccess = function () {
     this.gems.forEach(function (gem) {
         gem.animations.play('success');
     });
-}
+};
 
 MusicBox.prototype._showError = function () {
     this.gems.forEach(function (gem) {
