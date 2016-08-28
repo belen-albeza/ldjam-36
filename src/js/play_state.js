@@ -66,23 +66,32 @@ PlayState.create = function () {
         this.game.add.audio('note:2'),
         this.game.add.audio('note:3')
     ];
-    this.sfx.success = this.game.add.audio('sfx:ok');
-    this.sfx.error = this.game.add.audio('sfx:error');
-    this.sfx.artifact = this.game.add.audio('sfx:artifact');
+    this.sfx.success = this.game.add.audio('sfx:ok', 0.6);
+    this.sfx.error = this.game.add.audio('sfx:error', 0.6);
+    this.sfx.artifact = this.game.add.audio('sfx:artifact', 0.6);
+    this.sfx.steps = this.game.add.audio('sfx:steps', 0.6);
     this.minigameGroup = this.game.add.group();
 };
 
 PlayState.update = function () {
+    let moved = false;
     if (this.keys.left.isDown && !this.isControlFrozen) {
         this.heroine.move(-1);
         this.events.onHeroineMove.dispatch();
+        moved = true;
     }
     else if (this.keys.right.isDown && !this.isControlFrozen) {
         this.heroine.move(1);
         this.events.onHeroineMove.dispatch();
+        moved = true;
     }
     else {
+        this.sfx.steps.stop();
         this.heroine.move(0);
+    }
+
+    if (moved && !this.sfx.steps.isPlaying) {
+        this.sfx.steps.loopFull();
     }
 
     PlayState._handleCollisions();

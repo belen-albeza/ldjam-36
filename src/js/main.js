@@ -39,6 +39,8 @@ var PreloaderState = {
         this.game.load.audio('sfx:ok', 'audio/sfx_wobble.wav');
         this.game.load.audio('sfx:error', 'audio/sfx_error.wav');
         this.game.load.audio('sfx:artifact', 'audio/sfx_zium.wav');
+        this.game.load.audio('sfx:steps',
+            ['audio/sfx_steps.mp3', 'audio/sfx_steps.ogg']);
 
         // image assets
         this.game.load.image('background', 'images/background.png');
