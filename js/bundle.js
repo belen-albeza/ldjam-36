@@ -32,12 +32,27 @@ var PreloaderState = {
         this.loadingBar.anchor.setTo(0, 0.5);
         this.load.setPreloadSprite(this.loadingBar);
 
+        // audio assets
+        this.game.load.audio('note:0', ['audio/note0.mp3', 'audio/note0.ogg']);
+        this.game.load.audio('note:1', ['audio/note1.mp3', 'audio/note1.ogg']);
+        this.game.load.audio('note:2', ['audio/note2.mp3', 'audio/note2.ogg']);
+        this.game.load.audio('note:3', ['audio/note3.mp3', 'audio/note3.ogg']);
+        this.game.load.audio('sfx:ok', 'audio/sfx_wobble.wav');
+        this.game.load.audio('sfx:error', 'audio/sfx_error.wav');
+        this.game.load.audio('sfx:artifact', 'audio/sfx_zium.wav');
+        this.game.load.audio('sfx:steps',
+            ['audio/sfx_steps.mp3', 'audio/sfx_steps.ogg']);
+
         // image assets
         this.game.load.image('background', 'images/background.png');
         this.game.load.image('text_hud', 'images/text_hud.png');
         this.game.load.image('cloud', 'images/cloud.png');
-        this.game.load.image('heroine', 'images/chara.png');
+        this.game.load.spritesheet('heroine', 'images/chara.png', 32, 64);
         this.game.load.image('font', 'images/font.png');
+        this.game.load.image('music_box_bg', 'images/music_box_bg.png');
+        this.game.load.spritesheet('music_gem', 'images/music_gems.png',
+            96, 96);
+        this.game.load.spritesheet('artifact', 'images/artifact.png', 32, 64);
 
         // maps and tilesets
         this.game.load.image('tiles:world', 'images/world_elements.png');
@@ -65,18 +80,27 @@ window.onload = function () {
 
 var Scene = require('./world/scene.js');
 var Story = require('./world/story.js');
+var MusicBox = require('./world/music_box.js');
+
+var Heroine = require('./prefabs/heroine.js');
+
 var TypeWriter = require('./ui/type_writer.js');
 var Tooltip = require('./ui/tooltip.js');
 
-var Heroine = require('./prefabs/heroine.js');
 
 var PlayState = {};
 
 PlayState.init = function () {
     this.events = {
         onHeroineMove: new Phaser.Signal(),
-        onSceneEnter: new Phaser.Signal()
+        onSceneEnter: new Phaser.Signal(),
+        onPuzzleSuccess: new Phaser.Signal(),
+        onTouch: new Phaser.Signal(),
+        onUntouch: new Phaser.Signal(),
+        onAction: new Phaser.Signal()
     };
+    this.sfx = {};
+    this.lastOverlap = null;
 };
 
 PlayState.create = function () {
@@ -84,8 +108,11 @@ PlayState.create = function () {
     background.fixedToCamera = true;
 
     let attrezzo = this.game.add.group();
-    this.scene = new Scene(this.game, 'room00', attrezzo);
+    this.gameObjects = this.game.add.group();
+    this.scene = new Scene(this.game, 'room00', attrezzo, this.gameObjects);
+
     this.characters = this.game.add.group();
+    this.characters.add(this.gameObjects);
 
     let textHudGroup = this.game.add.group();
     let hudBackground = textHudGroup.add(new Phaser.Image(this.game, 0, 512,
@@ -95,40 +122,60 @@ PlayState.create = function () {
     this.typeWriter = new TypeWriter(textHudGroup, 8, 426);
     this.tooltip = new Tooltip(textHudGroup, 400, 506);
     this.tooltip.lineImage.anchor.setTo(0.5, 1);
+    this.cursorTooltip = new Tooltip(textHudGroup, 400, 390);
+    this.cursorTooltip.lineImage.anchor.setTo(0.5, 0);
 
     this._setupInput();
 
-    this.heroine = new Heroine(this.game, 100, 384);
+    this.heroine = new Heroine(this.game, 32, 384);
     this.characters.add(this.heroine);
     this.game.camera.follow(this.heroine);
 
-    this.story = new Story(this.game, this.typeWriter, this.tooltip,
-        this.events);
-    this.story.events.onFreezeControl.add(function () {
-        this.isControlFrozen = true;
-    }, this);
-    this.story.events.onReleaseControl.add(function () {
-        this.isControlFrozen = false;
-    }, this);
+    this._setupStory();
 
     this.isControlFrozen = false;
     this.story.start();
     // NOTE: always manually trigger onEnter in the first room
     this.events.onSceneEnter.dispatch(this.scene.key);
+
+    this.sfx.notes = [
+        this.game.add.audio('note:0'),
+        this.game.add.audio('note:1'),
+        this.game.add.audio('note:2'),
+        this.game.add.audio('note:3')
+    ];
+    this.sfx.success = this.game.add.audio('sfx:ok', 0.6);
+    this.sfx.error = this.game.add.audio('sfx:error', 0.6);
+    this.sfx.artifact = this.game.add.audio('sfx:artifact', 0.6);
+    this.sfx.steps = this.game.add.audio('sfx:steps', 0.6);
+    this.minigameGroup = this.game.add.group();
 };
 
 PlayState.update = function () {
+    let moved = false;
     if (this.keys.left.isDown && !this.isControlFrozen) {
         this.heroine.move(-1);
         this.events.onHeroineMove.dispatch();
+        this.heroine.animations.play('run');
+        moved = true;
     }
     else if (this.keys.right.isDown && !this.isControlFrozen) {
         this.heroine.move(1);
         this.events.onHeroineMove.dispatch();
+        this.heroine.animations.play('run');
+        moved = true;
     }
     else {
+        this.sfx.steps.stop();
         this.heroine.move(0);
+        this.heroine.animations.play('idle');
     }
+
+    if (moved && !this.sfx.steps.isPlaying) {
+        this.sfx.steps.loopFull();
+    }
+
+    PlayState._handleCollisions();
 };
 
 PlayState.render = function () {
@@ -146,12 +193,134 @@ PlayState._setupInput = function () {
         if (this.isControlFrozen) {
             this.typeWriter.next();
         }
+        else if (this.lastOverlap !== null && !this.lastOverlap.disabled) {
+            this.isControlFrozen = true;
+
+            if (this.lastOverlap.type === 'artifact') {
+                this.sfx.artifact.play();
+                this.lastOverlap.animations.play('activate');
+            }
+            // wait a bit for sfx and animation to be played
+            this.game.time.events.add(300, function () {
+                this.isControlFrozen = false;
+                this.events.onAction.dispatch({
+                    scene: this.scene.key,
+                    type: this.lastOverlap.type,
+                    id: this.lastOverlap.id
+                });
+            }, this);
+        }
     }, this);
+};
+
+PlayState._setupStory = function () {
+    this.story = new Story(this.game, this.typeWriter, this.tooltip,
+        this.events);
+
+    this.story.events.onFreezeControl.add(function () {
+        this.isControlFrozen = true;
+    }, this);
+    this.story.events.onReleaseControl.add(function () {
+        this.isControlFrozen = false;
+    }, this);
+    this.story.events.onDisableCurrentEntity.add(function () {
+        if (this.lastOverlap) {
+            this.lastOverlap.disabled = true;
+        }
+    }, this);
+    this.story.events.onShowMusicBox.add(function (melodyKey) {
+        this.isControlFrozen = true;
+        this._spawnMusicBox(melodyKey);
+    }, this);
+};
+
+PlayState._spawnMusicBox = function (melodyKey) {
+    this.musicBox = new MusicBox(this.minigameGroup, this.keys, this.sfx,
+        MusicBox.MELODIES[melodyKey]);
+
+    this.musicBox.events.onSuccess.addOnce(function () {
+        this._clearMusicBox();
+        this.isControlFrozen = false;
+        this.events.onPuzzleSuccess.dispatch({type: 'musicbox', key: melodyKey});
+    }, this);
+
+    this.game.time.events.add(1000, function () {
+        this.musicBox.play();
+    }, this);
+};
+
+PlayState._clearMusicBox = function () {
+    this.musicBox = null;
+    this.minigameGroup.removeAll();
+};
+
+PlayState._handleCollisions = function () {
+    this.cursorTooltip.erase();
+    let oldOverlap = this.lastOverlap;
+    let overlapping = false;
+
+    // TODO: this assumes ONLY one overlap at a given frame… it probably should
+    //       be more flexible!
+    this.game.physics.arcade.overlap(this.heroine, this.gameObjects,
+    function (heroine, object) {
+        let entityData = {
+            scene: this.scene.key,
+            type: object.type,
+            id: object.id
+        };
+
+        this.cursorTooltip.write(object.type, Tooltip.COLORS.WHITE);
+
+        // wasn't overlapping last frame
+        if (this.lastOverlap !== object) {
+            this.events.onTouch.dispatch(entityData);
+        }
+        this.lastOverlap = object;
+        overlapping = true;
+    }, (h, o) => !o.disabled, this);
+
+    if (!overlapping) { this.lastOverlap = null; }
+
+    if (oldOverlap !== this.lastOverlap && oldOverlap !== null) {
+        this.events.onUntouch.dispatch({
+            scene: this.scene.key,
+            type: oldOverlap.type,
+            id: oldOverlap.id
+        });
+    }
+};
+
+PlayState._findEntity = function (type, id) {
+    let found = this.gameObjects.filter(function (entity) {
+       return entity.type === type && entity.id === id;
+    });
+    return found.first;
 };
 
 module.exports = PlayState;
 
-},{"./prefabs/heroine.js":4,"./ui/tooltip.js":5,"./ui/type_writer.js":6,"./world/scene.js":7,"./world/story.js":8}],3:[function(require,module,exports){
+},{"./prefabs/heroine.js":5,"./ui/tooltip.js":7,"./ui/type_writer.js":8,"./world/music_box.js":9,"./world/scene.js":10,"./world/story.js":11}],3:[function(require,module,exports){
+'use strict';
+
+function Artifact(game, x, y, args) {
+    Phaser.Sprite.call(this, game, x, y, 'artifact');
+
+    this.anchor.setTo(0.5, 1);
+    this.frame = 0;
+    this.animations.add('activate', [0, 1, 2, 0], 10);
+
+    this.type = 'artifact';
+    this.id = args.artifactId;
+
+    this.game.physics.enable(this);
+}
+
+Artifact.prototype = Object.create(Phaser.Sprite.prototype);
+Artifact.prototype.constructor = Artifact;
+
+module.exports = Artifact;
+
+},{}],4:[function(require,module,exports){
 'use strict';
 
 const MIN_SPEED = 10;
@@ -196,7 +365,7 @@ Cloud.prototype.reset = function (x, y) {
 
 module.exports = Cloud;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 const MOVE_SPEED = 200;
@@ -207,6 +376,11 @@ function Heroine(game, x, y) {
    this.anchor.setTo(0.5, 1);
    this.game.physics.enable(this);
    this.body.collideWorldBounds = true;
+
+   this.animations.add('idle', [0, 1], 2);
+   this.animations.add('run', [2, 3, 4, 5, 6], 10);
+
+   this.animations.play('idle', null, true);
 }
 
 // inherit from Phaser.Sprite
@@ -222,7 +396,26 @@ Heroine.prototype.move = function (direction) {
 
 module.exports = Heroine;
 
-},{}],5:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
+'use strict';
+
+function MusicGem(game, x, y) {
+    Phaser.Sprite.call(this, game, x, y, 'music_gem');
+    this.animations.add('inactive', [2]);
+    this.animations.add('active', [0, 2], 3);
+    this.animations.add('wrong', [1, 2], 3);
+    this.animations.add('error', [1, 1, 2, 1, 1, 2, 1, 1, 2], 15);
+    this.animations.add('success', [0, 0, 2, 0, 0, 2, 0, 0, 2], 15);
+
+    this.animations.play('inactive');
+}
+
+MusicGem.prototype = Object.create(Phaser.Sprite.prototype);
+MusicGem.prototype.constructor = MusicGem;
+
+module.exports = MusicGem;
+
+},{}],7:[function(require,module,exports){
 'use strict';
 
 // TODO: refactor with colors of TypeWriter
@@ -256,12 +449,15 @@ Tooltip.prototype.write = function (text, color) {
 
 Tooltip.prototype.erase = function () {
     this.lineImage.visible = false;
+    this.lineFont.text = '';
 };
+
+Tooltip.COLORS = COLORS;
 
 
 module.exports = Tooltip;
 
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 'use strict';
 
 const LINE_COUNT = 3;
@@ -340,12 +536,162 @@ TypeWriter.LINE_COUNT = 3;
 
 module.exports = TypeWriter;
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
+'use strict';
+
+var MusicGem = require('../prefabs/music_gem.js');
+
+const MELODIES = {
+    TEST: [
+        {index: 0, start: 0, duration: 300},
+    ],
+    SANDMAN: [
+        {index: 0, start: 0, duration: 300},
+        {index: 3, start: 1000, duration: 300},
+        {index: 2, start: 1500, duration: 300},
+        {index: 1, start: 2000, duration: 300}
+    ]
+};
+
+function MusicBox(group, keys, sfx, melody) {
+    this.game = group.game;
+    this.group = group;
+    this.keys = keys;
+    this.events = {
+        onSuccess: new Phaser.Signal(),
+        onFailure: new Phaser.Signal()
+    };
+    this.sfx = sfx;
+    this.sfx.notes = sfx.notes;
+
+    let bg = this.group.add(new Phaser.Image(this.game, 0, 0, 'music_box_bg'));
+
+    let offsetx = this.game.width / 2 - bg.width / 2;
+    let offsety = 100;
+
+    bg.position.setTo(offsetx, offsety);
+
+    this.gems = [
+        this.group.add(new MusicGem(this.game, offsetx + 32, offsety + 40)),
+        this.group.add(new MusicGem(this.game, offsetx + 160, offsety + 40)),
+        this.group.add(new MusicGem(this.game, offsetx + 288, offsety + 40)),
+        this.group.add(new MusicGem(this.game, offsetx + 416, offsety + 40))
+    ];
+
+    // this.group.position.setTo(this.game.width / 2 - bg.width / 2, 100);
+    this.group.fixedToCamera = true;
+
+    this.melody = melody;
+}
+
+MusicBox.prototype.activate = function () {
+    this.play();
+};
+
+MusicBox.prototype.play = function () {
+    this.isListening = false;
+
+    this.timer = this.game.time.create(); // this will be autodestroyed
+    this.melody.forEach(function (note) {
+        this.timer.add(note.start, this._playNote, this, note.index);
+        this.timer.add(note.start + note.duration, this._stopNote, this,
+            note.index);
+    }, this);
+    this.timer.start();
+
+    this.timer.onComplete.addOnce(this.listen, this);
+};
+
+MusicBox.prototype.listen = function () {
+    this.isListening = true;
+    this.listenBuffer = [];
+
+    // bind up keys
+    this.keys.left.onDown.add(this._recordNote0, this);
+    this.keys.down.onDown.add(this._recordNote1, this);
+    this.keys.up.onDown.add(this._recordNote2, this);
+    this.keys.right.onDown.add(this._recordNote3, this);
+};
+
+MusicBox.prototype.cleanUpEvents = function () {
+    this.keys.left.onDown.remove(this._recordNote0, this);
+    this.keys.down.onDown.remove(this._recordNote1, this);
+    this.keys.up.onDown.remove(this._recordNote2, this);
+    this.keys.right.onDown.remove(this._recordNote3, this);
+};
+
+MusicBox.prototype._recordNote0 = function () { this._recordNote(0); };
+MusicBox.prototype._recordNote1 = function () { this._recordNote(1); };
+MusicBox.prototype._recordNote2 = function () { this._recordNote(2); };
+MusicBox.prototype._recordNote3 = function () { this._recordNote(3); };
+
+MusicBox.prototype._recordNote = function (index) {
+    this.listenBuffer.push(index);
+
+    if (this.melody[this.listenBuffer.length -1].index === index) {
+        // success!
+        this._playNote(index);
+        if (this.listenBuffer.length === this.melody.length) {
+            this.cleanUpEvents();
+            this.game.time.events.add(800, this._showSuccess, this);
+            this.game.time.events.add(1500, function () {
+                this.events.onSuccess.dispatch();
+            }, this);
+        }
+    }
+    else {
+        // error
+        this._playNote(index, true);
+        this.cleanUpEvents();
+        this.game.time.events.add(800, this._showError, this);
+        this.game.time.events.add(1500, function () {
+            this.events.onFailure.dispatch();
+            this.play();
+        }, this);
+    }
+};
+
+MusicBox.prototype._showSuccess = function () {
+    this.sfx.success.play();
+    this.gems.forEach(function (gem) {
+        gem.animations.play('success');
+    });
+};
+
+MusicBox.prototype._showError = function () {
+    this.sfx.error.play();
+    this.gems.forEach(function (gem) {
+        gem.animations.play('error');
+    });
+};
+
+MusicBox.prototype._playNote = function (index, isError) {
+    this.gems[index].animations.play(isError ? 'wrong' : 'active');
+    this.sfx.notes[index].play();
+};
+
+MusicBox.prototype._stopNote = function (index) {
+    this.gems[index].animations.play('inactive');
+};
+
+
+MusicBox.MELODIES = MELODIES;
+
+module.exports = MusicBox;
+
+},{"../prefabs/music_gem.js":6}],10:[function(require,module,exports){
 'use strict';
 
 var Cloud = require('../prefabs/cloud.js');
+var Artifact = require('../prefabs/artifact.js');
 
-const LAYERS = ['background00', 'background01', 'foreground00', 'foreground01'];
+const TILES = [
+    { gid: 106, sprite: Artifact, args: { artifactId: 0 } },
+    { gid: 107, sprite: Artifact, args: { artifactId: 1 } }
+];
+
+
+const LAYERS = ['background01', 'foreground00', 'foreground01', 'logic'];
 
 function getPositionFromIndex(data, index) {
     return {
@@ -354,7 +700,7 @@ function getPositionFromIndex(data, index) {
     };
 }
 
-function Scene(game, sceneKey, attrezzoGroup) {
+function Scene(game, sceneKey, attrezzoGroup, spritesGroup) {
     this.game = game;
     this.key = sceneKey;
     var data = JSON.parse(game.cache.getText(`map:${sceneKey}`));
@@ -371,9 +717,21 @@ function Scene(game, sceneKey, attrezzoGroup) {
         // fill layer with tile data
         let tiles = data.layers.find(x => x.name === layerName).data;
         tiles.forEach(function (tile, index) {
+            if (tile === -1) { return; }
+
             let position = getPositionFromIndex(data, index);
-            if (tile !== -1) {
+            if (layerName !== 'logic') {
                 this.map.putTile(tile, position.col, position.row, l);
+            }
+            else {
+                let entity = TILES.find(x => x.gid === tile);
+                if (entity) {
+                    spritesGroup.add(new entity.sprite(
+                        this.game,
+                        position.col * data.tilewidth + data.tilewidth / 2,
+                        (position.row + 1) * data.tileheight,
+                        entity.args));
+                }
             }
         }, this);
 
@@ -381,6 +739,7 @@ function Scene(game, sceneKey, attrezzoGroup) {
     }, this);
 
     this.layers[0].resizeWorld();
+    this.layers[this.layers.length-1].visible = false; // hide logic layer
 
     this._spawnAttrezzo(attrezzoGroup);
 }
@@ -393,7 +752,7 @@ Scene.prototype._spawnAttrezzo = function (group) {
 
 module.exports = Scene;
 
-},{"../prefabs/cloud.js":3}],8:[function(require,module,exports){
+},{"../prefabs/artifact.js":3,"../prefabs/cloud.js":4}],11:[function(require,module,exports){
 'use strict';
 
 var TypeWriter = require('../ui/type_writer.js');
@@ -412,12 +771,39 @@ function Story(game, typeWriter, tooltip, gameEvents) {
     this.gameEvents = gameEvents;
     this.callbacks = {};
     this.visitedScenes = {};
+    this.globals = {};
 
     this.textBuffer = [];
     this.events = {
         onReleaseControl: new Phaser.Signal(),
-        onFreezeControl: new Phaser.Signal()
+        onFreezeControl: new Phaser.Signal(),
+        onShowMusicBox: new Phaser.Signal(),
+        onDisableCurrentEntity: new Phaser.Signal()
     };
+
+    this.gameEvents.onPuzzleSuccess.add(function (puzzle) {
+        let callback = this.callbacks[
+            `onPuzzleSuccess:${puzzle.type}:${puzzle.key}`];
+        if (callback) { callback(); }
+    }, this);
+
+    this.gameEvents.onAction.add(function (entity) {
+        let callback = this.callbacks[
+            `onAction:${entity.scene}:${entity.type}:${entity.id}`];
+        if (callback) { callback(); }
+    }, this);
+
+    this.gameEvents.onTouch.add(function (entity) {
+        let callback = this.callbacks[
+            `onTouch:${entity.scene}:${entity.type}:${entity.id}`];
+        if (callback) { callback(); }
+    }, this);
+
+    this.gameEvents.onUntouch.add(function (entity) {
+        let callback = this.callbacks[
+            `onUntouch:${entity.scene}:${entity.type}:${entity.id}`];
+        if (callback) { callback(); }
+    }, this);
 
     this.gameEvents.onSceneEnter.add(function (sceneKey) {
         let wasVisited = this.visitedScenes[sceneKey] !== undefined;
@@ -460,6 +846,80 @@ Story.prototype.commitPage = function () {
 };
 
 Story.prototype._setupIntro = function () {
+    this.callbacks['onTouch:room00:artifact:0'] = function () {
+        if (!this.globals.sawArtifact) {
+            this.events.onFreezeControl.dispatch();
+            this.speak(CHARAS.HEROINE, 'What is this thing?');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'It looks like some kind of artifact.');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'I don\'t know why, but I have the impression');
+            this.speak(CHARAS.HEROINE, 'that it is ancient.');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'What will happen if I touch it?');
+            this.commitPage();
+            this.writer.print();
+            this.writer.events.onQueueFinish.addOnce(function () {
+                this.events.onReleaseControl.dispatch();
+                this.globals.sawArtifact = true;
+                this.tooltip.write('Press <SPACEBAR> to interact.');
+            }, this);
+        }
+        else {
+            this.tooltip.write('Press <SPACEBAR> to interact.');
+        }
+    }.bind(this);
+
+    this.callbacks['onAction:room00:artifact:1'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'Another of these artifacts...');
+        this.speak(CHARAS.HEROINE, 'Let\'s solve this!');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+            this.events.onShowMusicBox.dispatch('SANDMAN');
+            this.events.onDisableCurrentEntity.dispatch();
+        }, this);
+    }.bind(this);
+
+    this.callbacks['onAction:room00:artifact:0'] = function () {
+        this.tooltip.erase();
+        this.events.onShowMusicBox.dispatch('TEST');
+        this.events.onDisableCurrentEntity.dispatch();
+    }.bind(this);
+
+    this.callbacks['onPuzzleSuccess:musicbox:TEST'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'That was easy!');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'But has it changed anything?');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+        }, this);
+    }.bind(this);
+
+    this.callbacks['onPuzzleSuccess:musicbox:SANDMAN'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.GOD, 'Was this short? You bet!');
+        this.commitPage();
+        this.speak(CHARAS.GOD, 'As you can see, I\'m in a real hurry');
+        this.speak(CHARAS.GOD, 'to finish on time.');
+        this.commitPage();
+        this.speak(CHARAS.GOD, 'Please cheer me up on Twitter!');
+        this.speak(CHARAS.GOD, 'Thanks <3');
+        this.speak(CHARAS.GOD, '@ladybenko');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'What the hell was that?');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+        }, this);
+    }.bind(this);
+
     this.callbacks['onSceneFirstEnter:room00'] = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.HEROINE, 'What... is this?');
@@ -482,4 +942,4 @@ Story.prototype._setupIntro = function () {
 
 module.exports = Story;
 
-},{"../ui/type_writer.js":6}]},{},[1]);
+},{"../ui/type_writer.js":8}]},{},[1]);
