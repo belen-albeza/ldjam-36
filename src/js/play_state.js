@@ -30,9 +30,11 @@ PlayState.create = function () {
     background.fixedToCamera = true;
 
     let attrezzo = this.game.add.group();
-    this.characters = this.game.add.group();
-    this.gameObjects = this.characters.add(new Phaser.Group(this.game));
+    this.gameObjects = this.game.add.group();
     this.scene = new Scene(this.game, 'room00', attrezzo, this.gameObjects);
+
+    this.characters = this.game.add.group();
+    this.characters.add(this.gameObjects);
 
     let textHudGroup = this.game.add.group();
     let hudBackground = textHudGroup.add(new Phaser.Image(this.game, 0, 512,
@@ -68,8 +70,6 @@ PlayState.create = function () {
     this.sfx.error = this.game.add.audio('sfx:error');
     this.sfx.artifact = this.game.add.audio('sfx:artifact');
     this.minigameGroup = this.game.add.group();
-
-    // this._spawnMusicBox(MusicBox.MELODIES.TEST);
 };
 
 PlayState.update = function () {
