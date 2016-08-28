@@ -6,6 +6,16 @@ const MELODIES = {
     TEST: [
         {index: 0, start: 0, duration: 300},
     ],
+    PASODOBLE: [
+        {index: 0, start: 0, duration: 300},
+        {index: 1, start: 1000, duration: 300},
+        {index: 1, start: 2000, duration: 300},
+        {index: 1, start: 3000, duration: 300},
+        {index: 2, start: 3500, duration: 300},
+        {index: 1, start: 4000, duration: 300},
+        {index: 0, start: 4500, duration: 300},
+        {index: 3, start: 5000, duration: 300}
+    ],
     SANDMAN: [
         {index: 0, start: 0, duration: 300},
         {index: 3, start: 1000, duration: 300},

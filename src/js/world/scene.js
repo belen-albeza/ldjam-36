@@ -2,10 +2,13 @@
 
 var Cloud = require('../prefabs/cloud.js');
 var Artifact = require('../prefabs/artifact.js');
+var Decoration = require('../prefabs/decoration.js');
 
 const TILES = [
     { gid: 106, sprite: Artifact, args: { artifactId: 0 } },
-    { gid: 107, sprite: Artifact, args: { artifactId: 1 } }
+    { gid: 107, sprite: Artifact, args: { artifactId: 1 } },
+    { gid: 112, sprite: Decoration,
+        args: { id: 1, imageKey: 'wreckage', name: 'Wreckage' } }
 ];
 
 
@@ -43,12 +46,12 @@ function Scene(game, sceneKey, attrezzoGroup, spritesGroup) {
             }
             else {
                 let entity = TILES.find(x => x.gid === tile);
+                let x = position.col * data.tilewidth;
+                let y = position.row * data.tileheight +
+                    (entity.sprite === Artifact ? data.tileheight : 0);
                 if (entity) {
                     spritesGroup.add(new entity.sprite(
-                        this.game,
-                        position.col * data.tilewidth + data.tilewidth / 2,
-                        (position.row + 1) * data.tileheight,
-                        entity.args));
+                        this.game, x, y, entity.args));
                 }
             }
         }, this);

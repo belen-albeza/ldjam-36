@@ -5,11 +5,12 @@ var TypeWriter = require('../ui/type_writer.js');
 const CHARAS = {
     GAME: {name: 'Game', color: 'GRAY'},
     HEROINE: {name: 'Heroine', color: 'BLUE'},
-    GOD: {name: 'Alien God', color: 'ORANGE'}
+    GOD: {name: 'Alien God', color: 'ORANGE'},
+    NARRATOR: {name: 'Narrator', color: 'EMERALD'}
 };
 
 
-function Story(game, typeWriter, tooltip, gameEvents) {
+function Story(game, typeWriter, tooltip, gameEvents, sceneKey) {
     this.game = game;
     this.writer = typeWriter;
     this.tooltip = tooltip;
@@ -17,13 +18,15 @@ function Story(game, typeWriter, tooltip, gameEvents) {
     this.callbacks = {};
     this.visitedScenes = {};
     this.globals = {};
+    this.sceneKey = sceneKey;
 
     this.textBuffer = [];
     this.events = {
         onReleaseControl: new Phaser.Signal(),
         onFreezeControl: new Phaser.Signal(),
         onShowMusicBox: new Phaser.Signal(),
-        onDisableCurrentEntity: new Phaser.Signal()
+        onDisableCurrentEntity: new Phaser.Signal(),
+        onTeleport: new Phaser.Signal()
     };
 
     this.gameEvents.onPuzzleSuccess.add(function (puzzle) {
@@ -65,7 +68,14 @@ function Story(game, typeWriter, tooltip, gameEvents) {
 }
 
 Story.prototype.start = function () {
-    this._setupIntro();
+    switch(this.sceneKey) {
+        case 'intro':
+            this._setupIntro();
+            break;
+        case 'room00':
+            this._setupBuilding();
+            break;
+    }
 };
 
 Story.prototype.speak = function (character, text) {
@@ -91,7 +101,64 @@ Story.prototype.commitPage = function () {
 };
 
 Story.prototype._setupIntro = function () {
-    this.callbacks['onTouch:room00:artifact:0'] = function () {
+    this.callbacks['onSceneFirstEnter:intro'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'What... is this place?');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'What am I doing here?');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'I can\'t remember anything...');
+        this.commitPage();
+        this.writer.print();
+        this.tooltip.write('Press <SPACEBAR> to continue.');
+
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.tooltip.write('Press <ARROW KEYS> to move left and right.');
+            this.events.onReleaseControl.dispatch();
+            this.gameEvents.onHeroineMove.addOnce(function () {
+                this.tooltip.erase();
+            }, this);
+        }, this);
+    }.bind(this);
+
+    this.callbacks['onTouch:intro:decoration:1'] = function () {
+        this.tooltip.write('Press <SPACEBAR> to interact.');
+    }.bind(this);
+
+    this.callbacks['onUntouch:intro:decoration:1'] = function () {
+        this.tooltip.erase();
+    }.bind(this);
+
+    this.callbacks['onAction:intro:decoration:1'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.tooltip.erase();
+        if (!this.globals.sawWreckage) {
+            this.speak(CHARAS.HEROINE, 'This looks like the wreackage of a ship.');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'My ship?');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'Am I... stranded here?');
+            this.commitPage();
+            this.speak(CHARAS.GOD, 'You are not lost.');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'What was that?!');
+            this.commitPage();
+            this.speak(CHARAS.HEROINE, 'I think I heard something.');
+            this.speak(CHARAS.HEROINE, 'It must be the shock.');
+            this.commitPage();
+        }
+        else {
+            this.speak(CHARAS.HEROINE, 'No survivors, just me.');
+            this.commitPage();
+        }
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.globals.sawWreckage = true;
+            this.events.onReleaseControl.dispatch();
+        }, this);
+    }.bind(this);
+
+    this.callbacks['onTouch:intro:artifact:0'] = function () {
         if (!this.globals.sawArtifact) {
             this.events.onFreezeControl.dispatch();
             this.speak(CHARAS.HEROINE, 'What is this thing?');
@@ -115,24 +182,11 @@ Story.prototype._setupIntro = function () {
         }
     }.bind(this);
 
-    this.callbacks['onUntouch:room00:artifact:0'] = function () {
+    this.callbacks['onUntouch:intro:artifact:0'] = function () {
         this.tooltip.erase();
     }.bind(this);
 
-    this.callbacks['onAction:room00:artifact:1'] = function () {
-        this.events.onFreezeControl.dispatch();
-        this.speak(CHARAS.HEROINE, 'Another of these artifacts...');
-        this.speak(CHARAS.HEROINE, 'Let\'s solve this!');
-        this.commitPage();
-        this.writer.print();
-        this.writer.events.onQueueFinish.addOnce(function () {
-            this.events.onReleaseControl.dispatch();
-            this.events.onShowMusicBox.dispatch('SANDMAN');
-            this.events.onDisableCurrentEntity.dispatch();
-        }, this);
-    }.bind(this);
-
-    this.callbacks['onAction:room00:artifact:0'] = function () {
+    this.callbacks['onAction:intro:artifact:0'] = function () {
         this.tooltip.erase();
         this.events.onShowMusicBox.dispatch('TEST');
         this.events.onDisableCurrentEntity.dispatch();
@@ -146,37 +200,31 @@ Story.prototype._setupIntro = function () {
         this.commitPage();
         this.writer.print();
         this.writer.events.onQueueFinish.addOnce(function () {
-            this.events.onReleaseControl.dispatch();
+            this.events.onTeleport.dispatch('room00');
         }, this);
     }.bind(this);
 
-    this.callbacks['onPuzzleSuccess:musicbox:SANDMAN'] = function () {
-        this.events.onFreezeControl.dispatch();
-        this.speak(CHARAS.GOD, 'Was this short? You bet!');
-        this.commitPage();
-        this.speak(CHARAS.GOD, 'As you can see, I\'m in a real hurry');
-        this.speak(CHARAS.GOD, 'to finish on time.');
-        this.commitPage();
-        this.speak(CHARAS.GOD, 'Please cheer me up on Twitter!');
-        this.speak(CHARAS.GOD, 'Thanks <3');
-        this.speak(CHARAS.GOD, '@ladybenko');
-        this.commitPage();
-        this.speak(CHARAS.HEROINE, 'What the hell was that?');
-        this.commitPage();
-        this.writer.print();
-        this.writer.events.onQueueFinish.addOnce(function () {
-            this.events.onReleaseControl.dispatch();
-        }, this);
-    }.bind(this);
 
+};
+
+Story.prototype._setupBuilding = function () {
     this.callbacks['onSceneFirstEnter:room00'] = function () {
         this.events.onFreezeControl.dispatch();
-        this.speak(CHARAS.HEROINE, 'What... is this?');
+        this.speak(CHARAS.HEROINE, 'What happened?!');
         this.commitPage();
-        this.speak(CHARAS.HEROINE, 'What am I doing here...?');
+        this.speak(CHARAS.HEROINE, 'I am in a different place now');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'Is this real?');
+        this.commitPage();
+        this.speak(CHARAS.GOD, 'That depends of your idea of reality.');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'WHAT?!');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'Who are you?!');
+        this.commitPage();
+        this.speak(CHARAS.GOD, 'I am who I am.');
         this.commitPage();
         this.writer.print();
-
         this.tooltip.write('Press <SPACEBAR> to continue.');
 
         this.writer.events.onQueueFinish.addOnce(function () {
@@ -186,6 +234,73 @@ Story.prototype._setupIntro = function () {
                 this.tooltip.erase();
             }, this);
         }, this);
+    }.bind(this);
+
+    this.callbacks['onAction:room00:artifact:0'] = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'Another of these artifacts...');
+        this.speak(CHARAS.HEROINE, 'Let\'s solve this!');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+            this.events.onShowMusicBox.dispatch('SANDMAN');
+            this.events.onDisableCurrentEntity.dispatch();
+        }, this);
+    }.bind(this);
+
+    let onFinishFirstArtifact = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.HEROINE, 'I think I\'m getting the hang of this...');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+        }, this);
+    }.bind(this);
+
+    let onFinishSecondArtifact = function () {
+        this.events.onFreezeControl.dispatch();
+        this.speak(CHARAS.NARRATOR, 'Was this short? You bet!');
+        this.commitPage();
+        this.speak(CHARAS.NARRATOR, 'As you can see, I\'m was in a hurry');
+        this.speak(CHARAS.NARRATOR, 'to finish on time for the jam.');
+        this.commitPage();
+        this.speak(CHARAS.NARRATOR, 'Please let me know if you liked it!');
+        this.speak(CHARAS.NARRATOR, 'Thanks <3');
+        this.speak(CHARAS.NARRATOR, '@ladybenko');
+        this.commitPage();
+        this.speak(CHARAS.HEROINE, 'What the hell was that?');
+        this.commitPage();
+        this.writer.print();
+        this.writer.events.onQueueFinish.addOnce(function () {
+            this.events.onReleaseControl.dispatch();
+        }, this);
+    }.bind(this);
+
+    this.callbacks['onPuzzleSuccess:musicbox:SANDMAN'] = function () {
+        if (this.globals.didSolveFirstArtifact) {
+            onFinishSecondArtifact();
+        }
+        else {
+            this.globals.didSolveFirstArtifact = true;
+            onFinishFirstArtifact();
+        }
+    }.bind(this);
+
+    this.callbacks['onAction:room00:artifact:1'] = function () {
+        this.events.onShowMusicBox.dispatch('PASODOBLE');
+        this.events.onDisableCurrentEntity.dispatch();
+    }.bind(this);
+
+    this.callbacks['onPuzzleSuccess:musicbox:PASODOBLE'] = function () {
+        if (this.globals.didSolveFirstArtifact) {
+            onFinishSecondArtifact();
+        }
+        else {
+            this.globals.didSolveFirstArtifact = true;
+            onFinishFirstArtifact();
+        }
     }.bind(this);
 };
 

@@ -12,7 +12,7 @@ var Tooltip = require('./ui/tooltip.js');
 
 var PlayState = {};
 
-PlayState.init = function () {
+PlayState.init = function (sceneKey) {
     this.events = {
         onHeroineMove: new Phaser.Signal(),
         onSceneEnter: new Phaser.Signal(),
@@ -23,6 +23,7 @@ PlayState.init = function () {
     };
     this.sfx = {};
     this.lastOverlap = null;
+    this.sceneKey = sceneKey;
 };
 
 PlayState.create = function () {
@@ -31,7 +32,8 @@ PlayState.create = function () {
 
     let attrezzo = this.game.add.group();
     this.gameObjects = this.game.add.group();
-    this.scene = new Scene(this.game, 'room00', attrezzo, this.gameObjects);
+    this.scene = new Scene(this.game, this.sceneKey, attrezzo,
+        this.gameObjects);
 
     this.characters = this.game.add.group();
     this.characters.add(this.gameObjects);
@@ -70,6 +72,7 @@ PlayState.create = function () {
     this.sfx.error = this.game.add.audio('sfx:error', 0.6);
     this.sfx.artifact = this.game.add.audio('sfx:artifact', 0.6);
     this.sfx.steps = this.game.add.audio('sfx:steps', 0.6);
+    this.sfx.teleport = this.game.add.audio('sfx:teleport', 0.6);
     this.minigameGroup = this.game.add.group();
 };
 
@@ -137,7 +140,7 @@ PlayState._setupInput = function () {
 
 PlayState._setupStory = function () {
     this.story = new Story(this.game, this.typeWriter, this.tooltip,
-        this.events);
+        this.events, this.sceneKey);
 
     this.story.events.onFreezeControl.add(function () {
         this.isControlFrozen = true;
@@ -145,14 +148,24 @@ PlayState._setupStory = function () {
     this.story.events.onReleaseControl.add(function () {
         this.isControlFrozen = false;
     }, this);
+
     this.story.events.onDisableCurrentEntity.add(function () {
         if (this.lastOverlap) {
             this.lastOverlap.disabled = true;
         }
     }, this);
+
     this.story.events.onShowMusicBox.add(function (melodyKey) {
         this.isControlFrozen = true;
         this._spawnMusicBox(melodyKey);
+    }, this);
+
+    this.story.events.onTeleport.add(function (sceneKey) {
+        this.isControlFrozen = true;
+        this.sfx.teleport.play();
+        this.sfx.teleport.onStop.addOnce(function () {
+            this.game.state.start('play', true, false, sceneKey);
+        }, this);
     }, this);
 };
 
@@ -191,7 +204,7 @@ PlayState._handleCollisions = function () {
             id: object.id
         };
 
-        this.cursorTooltip.write(object.type, Tooltip.COLORS.WHITE);
+        this.cursorTooltip.write(object.name, Tooltip.COLORS.GRAY);
 
         // wasn't overlapping last frame
         if (this.lastOverlap !== object) {

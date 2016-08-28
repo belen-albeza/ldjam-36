@@ -39,6 +39,7 @@ var PreloaderState = {
         this.game.load.audio('sfx:ok', 'audio/sfx_wobble.wav');
         this.game.load.audio('sfx:error', 'audio/sfx_error.wav');
         this.game.load.audio('sfx:artifact', 'audio/sfx_zium.wav');
+        this.game.load.audio('sfx:teleport', 'audio/sfx_teleport.wav');
         this.game.load.audio('sfx:steps',
             ['audio/sfx_steps.mp3', 'audio/sfx_steps.ogg']);
 
@@ -52,14 +53,16 @@ var PreloaderState = {
         this.game.load.spritesheet('music_gem', 'images/music_gems.png',
             96, 96);
         this.game.load.spritesheet('artifact', 'images/artifact.png', 32, 64);
+        this.game.load.image('wreckage', 'images/wreckage.png');
 
         // maps and tilesets
         this.game.load.image('tiles:world', 'images/world_elements.png');
         this.game.load.text('map:room00', 'data/room00.min.json');
+        this.game.load.text('map:intro', 'data/scene_intro.min.json');
     },
 
     create: function () {
-        this.game.state.start('play');
+        this.game.state.start('play', true, false, 'intro');
     }
 };
 
