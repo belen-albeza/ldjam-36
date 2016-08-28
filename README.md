@@ -86,3 +86,9 @@ You can deploy to **Github Pages** with the `deploy:ghpages` task, which will bu
 ```
 gulp deploy:ghpages
 ```
+
+## License
+
+This project is published under a [Creative Commons License Attribution NonCommercial ShareAlike 4.0 International](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+
+The song in the files `src/audio/bgm.mp3` and `src/audio/bgm.ogg` is published under a [Creative Commons License Attribution ShareAlike 4.0](http://creativecommons.org/licenses/by-sa/4.0/).
