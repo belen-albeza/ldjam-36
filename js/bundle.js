@@ -664,6 +664,7 @@ var MusicGem = require('../prefabs/music_gem.js');
 const MELODIES = {
     TEST: [
         {index: 0, start: 0, duration: 300},
+        {index: 3, start: 1000, duration: 300}
     ],
     PASODOBLE: [
         {index: 0, start: 0, duration: 300},
@@ -1146,7 +1147,7 @@ Story.prototype._setupBuilding = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.NARRATOR, 'Was this short? You bet!');
         this.commitPage();
-        this.speak(CHARAS.NARRATOR, 'As you can see, I\'m was in a hurry');
+        this.speak(CHARAS.NARRATOR, 'As you can see, I was in a hurry');
         this.speak(CHARAS.NARRATOR, 'to finish on time for the jam.');
         this.commitPage();
         this.speak(CHARAS.NARRATOR, 'Please let me know if you liked it!');
