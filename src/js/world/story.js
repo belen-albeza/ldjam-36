@@ -258,7 +258,7 @@ Story.prototype._setupBuilding = function () {
         this.events.onFreezeControl.dispatch();
         this.speak(CHARAS.NARRATOR, 'Was this short? You bet!');
         this.commitPage();
-        this.speak(CHARAS.NARRATOR, 'As you can see, I\'m was in a hurry');
+        this.speak(CHARAS.NARRATOR, 'As you can see, I was in a hurry');
         this.speak(CHARAS.NARRATOR, 'to finish on time for the jam.');
         this.commitPage();
         this.speak(CHARAS.NARRATOR, 'Please let me know if you liked it!');
