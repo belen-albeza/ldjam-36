@@ -5,6 +5,7 @@ var MusicGem = require('../prefabs/music_gem.js');
 const MELODIES = {
     TEST: [
         {index: 0, start: 0, duration: 300},
+        {index: 3, start: 1000, duration: 300}
     ],
     PASODOBLE: [
         {index: 0, start: 0, duration: 300},
