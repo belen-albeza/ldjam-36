@@ -4,7 +4,7 @@ Ludum Dare 36 entry.
 
 Play the game online!
 
-- [belenalbeza.com](http://lab.belenalbeza.com/games/ldjam-36/)
+- [itch.io](https://ladybenko.itch.io/the-language-of-the-gods-ld36)
 - [Github pages](https://belen-albeza.github.io/ldjam-36) (mirror)
 
 Initial scaffolding generated with [generator-gamejam](https://github.com/belen-albeza/generator-gamejam/).
